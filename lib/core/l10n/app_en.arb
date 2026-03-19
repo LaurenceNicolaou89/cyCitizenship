@@ -1,0 +1,99 @@
+{
+  "@@locale": "en",
+  "appTitle": "CyCitizenship",
+  "navHome": "Home",
+  "navPractice": "Practice",
+  "navAi": "AI",
+  "navInfo": "Info",
+  "navProfile": "Profile",
+  "welcomeTitle": "Welcome to CyCitizenship",
+  "welcomeSubtitle": "Your path to Cyprus citizenship",
+  "selectLanguage": "Select your language",
+  "selectRoute": "Select your route",
+  "generalRoute": "General Route (7+ years)",
+  "fastTrackRoute": "Fast-Track (3-4 years)",
+  "signIn": "Sign In",
+  "signUp": "Sign Up",
+  "continueAsGuest": "Continue as Guest",
+  "email": "Email",
+  "password": "Password",
+  "forgotPassword": "Forgot Password?",
+  "orSignInWith": "Or sign in with",
+  "nextExam": "Next Exam",
+  "daysLeft": "{days} days left",
+  "@daysLeft": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "dailyQuestion": "Daily Question",
+  "dayStreak": "{count} Day Streak",
+  "@dayStreak": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "averageScore": "Average Score",
+  "quickActions": "Quick Actions",
+  "mockExam": "Mock Exam",
+  "flashcards": "Flashcards",
+  "aiTutor": "AI Tutor",
+  "greekPractice": "Greek Practice",
+  "startExam": "Start Exam",
+  "examSimulator": "Exam Simulator",
+  "questionOf": "Question {current} of {total}",
+  "@questionOf": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "nextQuestion": "Next Question",
+  "submitExam": "Submit Exam",
+  "examResults": "Results",
+  "passed": "PASSED",
+  "failed": "FAILED",
+  "reviewAnswers": "Review Answers",
+  "tryAgain": "Try Again",
+  "geography": "Geography",
+  "politics": "Politics",
+  "culture": "Culture",
+  "dailyLife": "Daily Life",
+  "focusOn": "Focus on: {category}",
+  "@focusOn": {
+    "placeholders": {
+      "category": {"type": "String"}
+    }
+  },
+  "knowIt": "Know It",
+  "dontKnow": "Don't Know",
+  "tapToReveal": "Tap to reveal",
+  "aiTutorGreeting": "Hi! I'm your Cyprus exam tutor. Ask me anything about history, politics, or culture.",
+  "typeQuestion": "Type a question...",
+  "smartPractice": "Smart Practice",
+  "examDates": "Exam Dates",
+  "examCenters": "Exam Centers",
+  "applicationChecklist": "Application Checklist",
+  "keepLearning": "Keep Learning",
+  "weakAreas": "Weak Areas",
+  "profile": "Profile",
+  "settings": "Settings",
+  "language": "Language",
+  "notifications": "Notifications",
+  "darkMode": "Dark Mode",
+  "subscription": "Subscription",
+  "free": "Free",
+  "premium": "Premium",
+  "upgradeToPremium": "Upgrade to Premium",
+  "premiumBenefits": "Unlock all features for just \u20ac20",
+  "restorePurchase": "Restore Purchase",
+  "questionsToday": "{used}/{limit} questions today",
+  "@questionsToday": {
+    "placeholders": {
+      "used": {"type": "int"},
+      "limit": {"type": "int"}
+    }
+  },
+  "internetRequired": "Internet connection required for AI features",
+  "noUpcomingExam": "No upcoming exam scheduled"
+}
