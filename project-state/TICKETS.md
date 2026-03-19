@@ -3,12 +3,12 @@
 ## Epic 1: Project Foundation
 | ID | Title | Agent | Status | Priority |
 |----|-------|-------|--------|----------|
-| CYC-001 | Flutter project scaffolding & folder structure | DevOps | pending | P0 |
-| CYC-002 | Firebase project setup (Auth, Firestore, FCM, Analytics) | Backend Dev | pending | P0 |
-| CYC-003 | Theme, design tokens & shared widgets | Frontend Dev | pending | P0 |
-| CYC-004 | Localization setup (EN, RU, EL) with ARB files | Frontend Dev | pending | P0 |
-| CYC-005 | Navigation setup (go_router + bottom nav) | Frontend Dev | pending | P0 |
-| CYC-006 | Firestore security rules | Security Dev | pending | P0 |
+| CYC-001 | Flutter project scaffolding & folder structure | DevOps | done | P0 |
+| CYC-002 | Firebase project setup (Auth, Firestore, FCM, Analytics) | Backend Dev | done | P0 |
+| CYC-003 | Theme, design tokens & shared widgets | Frontend Dev | done | P0 |
+| CYC-004 | Localization setup (EN, RU, EL) with ARB files | Frontend Dev | done | P0 |
+| CYC-005 | Navigation setup (go_router + bottom nav) | Frontend Dev | done | P0 |
+| CYC-006 | Firestore security rules | Security Dev | done | P0 |
 
 ### Acceptance Criteria
 - **CYC-001**: Flutter project runs on iOS & Android emulators, clean architecture folder structure matches `docs/architecture.md`, all core dependencies in pubspec.yaml
