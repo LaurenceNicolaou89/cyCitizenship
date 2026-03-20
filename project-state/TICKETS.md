@@ -187,9 +187,9 @@
 ## Epic 12: Notifications
 | ID | Title | Agent | Status | Priority |
 |----|-------|-------|--------|----------|
-| CYC-049 | FCM setup & notification handling | Backend Dev | pending | P1 |
-| CYC-050 | Daily question Cloud Function | Backend Dev | pending | P1 |
-| CYC-051 | Exam reminder Cloud Function | Backend Dev | pending | P1 |
+| CYC-049 | FCM setup & notification handling | Backend Dev | done | P1 |
+| CYC-050 | Daily question Cloud Function | Backend Dev | done | P1 |
+| CYC-051 | Exam reminder Cloud Function | Backend Dev | done | P1 |
 
 ### Acceptance Criteria
 - **CYC-049**: FCM initialized, permission request on onboarding, notification tap opens correct screen (deep link)
@@ -201,8 +201,8 @@
 ## Epic 13: Keep Learning Integration
 | ID | Title | Agent | Status | Priority |
 |----|-------|-------|--------|----------|
-| CYC-052 | Keep Learning section UI | Frontend Dev | pending | P2 |
-| CYC-053 | Course listing from Firestore | Backend Dev | pending | P2 |
+| CYC-052 | Keep Learning section UI | Frontend Dev | done | P2 |
+| CYC-053 | Course listing from Firestore | Backend Dev | done | P2 |
 
 ### Acceptance Criteria
 - **CYC-052**: Dedicated section under Info tab. Course cards with title, description, price, type badge. Tap → booking URL
@@ -213,8 +213,8 @@
 ## Epic 14: Offline Support & Performance
 | ID | Title | Agent | Status | Priority |
 |----|-------|-------|--------|----------|
-| CYC-054 | Offline mode for questions & flashcards | Backend Dev | pending | P1 |
-| CYC-055 | Progress sync (offline → online) | Backend Dev | pending | P1 |
+| CYC-054 | Offline mode for questions & flashcards | Backend Dev | done | P1 |
+| CYC-055 | Progress sync (offline → online) | Backend Dev | done | P1 |
 
 ### Acceptance Criteria
 - **CYC-054**: Questions and flashcard data cached in Hive. App functional in airplane mode for practice. AI shows "Internet required" message
