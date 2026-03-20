@@ -23,11 +23,11 @@
 ## Epic 2: Authentication & User Management
 | ID | Title | Agent | Status | Priority |
 |----|-------|-------|--------|----------|
-| CYC-007 | Auth screens (sign up, sign in, forgot password) | Frontend Dev | pending | P0 |
-| CYC-008 | Firebase Auth integration (email, Google, Apple) | Backend Dev | pending | P0 |
-| CYC-009 | User Firestore document creation on sign-up | Backend Dev | pending | P0 |
-| CYC-010 | Guest mode with limited access | Backend Dev | pending | P1 |
-| CYC-011 | Onboarding flow (language, route selection) | Frontend Dev | pending | P0 |
+| CYC-007 | Auth screens (sign up, sign in, forgot password) | Frontend Dev | done | P0 |
+| CYC-008 | Firebase Auth integration (email, Google, Apple) | Backend Dev | done | P0 |
+| CYC-009 | User Firestore document creation on sign-up | Backend Dev | done | P0 |
+| CYC-010 | Guest mode with limited access | Backend Dev | done | P1 |
+| CYC-011 | Onboarding flow (language, route selection) | Frontend Dev | done | P0 |
 
 ### Acceptance Criteria
 - **CYC-007**: Sign up/in screens match wireframes, form validation, error handling, loading states. Apple Sign-In button on iOS
@@ -41,10 +41,10 @@
 ## Epic 3: Question Bank & Content
 | ID | Title | Agent | Status | Priority |
 |----|-------|-------|--------|----------|
-| CYC-012 | Firestore question schema & seed data | DBA | pending | P0 |
+| CYC-012 | Firestore question schema & seed data | DBA | done | P0 |
 | CYC-013 | Question sync to local storage (Hive) | Backend Dev | pending | P0 |
-| CYC-014 | Exam dates collection & seed data | DBA | pending | P1 |
-| CYC-015 | Keep Learning courses collection & seed data | DBA | pending | P2 |
+| CYC-014 | Exam dates collection & seed data | DBA | done | P1 |
+| CYC-015 | Keep Learning courses collection & seed data | DBA | done | P2 |
 
 ### Acceptance Criteria
 - **CYC-012**: Questions collection matches schema in `docs/architecture.md`. Minimum 50 seed questions across all 4 categories, all 3 languages. Indexed by category, difficulty
@@ -57,10 +57,10 @@
 ## Epic 4: Home Screen & Dashboard
 | ID | Title | Agent | Status | Priority |
 |----|-------|-------|--------|----------|
-| CYC-016 | Home screen layout & widgets | Frontend Dev | pending | P0 |
-| CYC-017 | Exam countdown widget | Frontend Dev | pending | P1 |
-| CYC-018 | Study streak display & logic | Backend Dev | pending | P1 |
-| CYC-019 | Quick action buttons | Frontend Dev | pending | P1 |
+| CYC-016 | Home screen layout & widgets | Frontend Dev | done | P0 |
+| CYC-017 | Exam countdown widget | Frontend Dev | done | P1 |
+| CYC-018 | Study streak display & logic | Backend Dev | done | P1 |
+| CYC-019 | Quick action buttons | Frontend Dev | done | P1 |
 
 ### Acceptance Criteria
 - **CYC-016**: Home screen matches wireframe — daily question card, streak, average score, quick actions. Pull-to-refresh, skeleton loading
@@ -73,11 +73,11 @@
 ## Epic 5: Exam Simulator
 | ID | Title | Agent | Status | Priority |
 |----|-------|-------|--------|----------|
-| CYC-020 | Exam simulator BLoC & logic | Backend Dev | pending | P0 |
-| CYC-021 | Exam simulator UI (question screen, timer, progress) | Frontend Dev | pending | P0 |
-| CYC-022 | Exam results screen with category breakdown | Frontend Dev | pending | P0 |
-| CYC-023 | Exam history storage & display | Backend Dev | pending | P1 |
-| CYC-024 | Review wrong answers with explanations | Frontend Dev | pending | P1 |
+| CYC-020 | Exam simulator BLoC & logic | Backend Dev | done | P0 |
+| CYC-021 | Exam simulator UI (question screen, timer, progress) | Frontend Dev | done | P0 |
+| CYC-022 | Exam results screen with category breakdown | Frontend Dev | done | P0 |
+| CYC-023 | Exam history storage & display | Backend Dev | done | P1 |
+| CYC-024 | Review wrong answers with explanations | Frontend Dev | done | P1 |
 
 ### Acceptance Criteria
 - **CYC-020**: Random 25 questions weighted by category (6/7/6/6). 45-min timer, auto-submit on expiry. Pass thresholds: 60% citizenship, 50% LTR
