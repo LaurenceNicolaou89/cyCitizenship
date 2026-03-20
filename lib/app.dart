@@ -15,7 +15,9 @@ import 'features/auth/bloc/auth_bloc.dart';
 import 'features/auth/bloc/auth_event.dart';
 
 class CyCitizenshipApp extends StatelessWidget {
-  const CyCitizenshipApp({super.key});
+  const CyCitizenshipApp({super.key, required this.onboardingComplete});
+
+  final bool onboardingComplete;
 
   static const _geminiApiKey = String.fromEnvironment(
     'GEMINI_API_KEY',
@@ -56,7 +58,7 @@ class CyCitizenshipApp extends StatelessWidget {
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
           themeMode: ThemeMode.system,
-          routerConfig: router,
+          routerConfig: createRouter(onboardingComplete: onboardingComplete),
         ),
       ),
     );
