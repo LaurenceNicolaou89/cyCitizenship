@@ -198,7 +198,7 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, color: AppColors.textSecondary, size: 20),
+        Icon(icon, color: Theme.of(context).colorScheme.onSurfaceVariant, size: 20),
         const SizedBox(width: AppSpacing.sm),
         Text(label, style: Theme.of(context).textTheme.bodyMedium),
         const Spacer(),
@@ -268,6 +268,7 @@ class _InExamView extends StatelessWidget {
         ),
         leading: IconButton(
           icon: const Icon(Icons.close),
+          tooltip: 'Exit exam',
           onPressed: () => _showExitDialog(context),
         ),
         actions: [
@@ -285,7 +286,7 @@ class _InExamView extends StatelessWidget {
           LinearProgressIndicator(
             value: (state.currentIndex + 1) / state.totalQuestions,
             minHeight: 4,
-            backgroundColor: AppColors.border,
+            backgroundColor: Theme.of(context).colorScheme.outlineVariant,
             valueColor:
                 const AlwaysStoppedAnimation<Color>(AppColors.primary),
           ),

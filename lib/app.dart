@@ -5,6 +5,11 @@ import 'config/theme.dart';
 import 'config/routes.dart';
 import 'core/services/auth_service.dart';
 import 'core/services/firestore_service.dart';
+import 'core/services/question_repository.dart';
+import 'core/services/progress_sync_service.dart';
+import 'core/services/notification_service.dart';
+import 'core/services/billing_service.dart';
+import 'core/services/analytics_service.dart';
 import 'features/auth/bloc/auth_bloc.dart';
 import 'features/auth/bloc/auth_event.dart';
 
@@ -17,6 +22,11 @@ class CyCitizenshipApp extends StatelessWidget {
       providers: [
         RepositoryProvider(create: (_) => AuthService()),
         RepositoryProvider(create: (_) => FirestoreService()),
+        RepositoryProvider(create: (_) => QuestionRepository()),
+        RepositoryProvider(create: (_) => ProgressSyncService()),
+        RepositoryProvider(create: (_) => NotificationService()),
+        RepositoryProvider(create: (_) => BillingService()),
+        RepositoryProvider(create: (_) => AnalyticsService()),
       ],
       child: BlocProvider(
         create: (context) => AuthBloc(

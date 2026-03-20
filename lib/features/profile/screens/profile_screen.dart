@@ -332,7 +332,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           decoration: BoxDecoration(
             color: badge.unlocked
                 ? AppColors.secondary.withValues(alpha: 0.15)
-                : AppColors.border.withValues(alpha: 0.3),
+                : Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(14),
           ),
           child: Icon(
@@ -349,7 +349,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           style: theme.textTheme.bodySmall?.copyWith(
             fontSize: 10,
             color: badge.unlocked
-                ? AppColors.textPrimary
+                ? theme.colorScheme.onSurface
                 : AppColors.disabled,
           ),
           textAlign: TextAlign.center,

@@ -44,7 +44,7 @@ class _NoResultsFallback extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.quiz, size: 48, color: AppColors.textSecondary),
+              Icon(Icons.quiz, size: 48, color: Theme.of(context).colorScheme.onSurfaceVariant),
               const SizedBox(height: AppSpacing.md),
               const Text('No exam results available.'),
               const SizedBox(height: AppSpacing.lg),
@@ -241,7 +241,7 @@ class _ScoreCircle extends StatelessWidget {
             child: CircularProgressIndicator(
               value: percentage / 100,
               strokeWidth: 12,
-              backgroundColor: AppColors.border,
+              backgroundColor: Theme.of(context).colorScheme.outlineVariant,
               valueColor: AlwaysStoppedAnimation<Color>(color),
               strokeCap: StrokeCap.round,
             ),
@@ -259,7 +259,7 @@ class _ScoreCircle extends StatelessWidget {
               Text(
                 '${percentage.round()}%',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppColors.textSecondary,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
               ),
             ],
@@ -386,7 +386,7 @@ class _CategoryBreakdownBar extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 8,
-              backgroundColor: AppColors.border,
+              backgroundColor: Theme.of(context).colorScheme.outlineVariant,
               valueColor: AlwaysStoppedAnimation<Color>(_categoryColor),
             ),
           ),

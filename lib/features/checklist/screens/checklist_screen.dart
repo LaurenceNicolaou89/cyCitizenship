@@ -240,7 +240,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
                               value: progress,
                               strokeWidth: 6,
                               backgroundColor:
-                                  AppColors.border,
+                                  theme.colorScheme.outlineVariant,
                               valueColor:
                                   AlwaysStoppedAnimation<Color>(
                                 progress == 1.0
@@ -314,13 +314,13 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
             decoration: BoxDecoration(
               color: isChecked
                   ? AppColors.success.withValues(alpha: 0.1)
-                  : AppColors.border.withValues(alpha: 0.3),
+                  : Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
               item.icon,
               size: 20,
-              color: isChecked ? AppColors.success : AppColors.textSecondary,
+              color: isChecked ? AppColors.success : theme.colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
@@ -334,7 +334,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
                     fontWeight: FontWeight.w500,
                     decoration:
                         isChecked ? TextDecoration.lineThrough : null,
-                    color: isChecked ? AppColors.textSecondary : null,
+                    color: isChecked ? theme.colorScheme.onSurfaceVariant : null,
                   ),
                 ),
                 Text(
@@ -371,11 +371,14 @@ class _RouteButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 10),
+    return Semantics(
+      button: true,
+      label: '$label${selected ? ', selected' : ''}',
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
           color: selected ? AppColors.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
@@ -386,8 +389,9 @@ class _RouteButton extends StatelessWidget {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: selected ? Colors.white : AppColors.textSecondary,
+            color: selected ? Colors.white : Theme.of(context).colorScheme.onSurfaceVariant,
           ),
+        ),
         ),
       ),
     );

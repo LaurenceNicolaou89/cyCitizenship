@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:cy_citizenship/features/auth/bloc/auth_bloc.dart';
 import 'package:cy_citizenship/features/auth/bloc/auth_event.dart';
 import 'package:cy_citizenship/features/auth/bloc/auth_state.dart';
 

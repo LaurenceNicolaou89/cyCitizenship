@@ -104,6 +104,7 @@ class _AiTutorViewState extends State<_AiTutorView> {
           ),
           IconButton(
             icon: const Icon(Icons.delete_outline),
+            tooltip: 'Clear conversation',
             onPressed: () {
               context.read<AiTutorBloc>().add(const ClearConversation());
             },
@@ -201,7 +202,7 @@ class _AiTutorViewState extends State<_AiTutorView> {
             Text(
               'Ask me anything about the Cyprus citizenship exam -- history, politics, geography, culture, or daily life in Cyprus.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
               textAlign: TextAlign.center,
             ),
@@ -266,7 +267,7 @@ class _AiTutorViewState extends State<_AiTutorView> {
                   borderSide: BorderSide.none,
                 ),
                 filled: true,
-                fillColor: AppColors.background,
+                fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.md,
                   vertical: AppSpacing.sm,
@@ -278,18 +279,22 @@ class _AiTutorViewState extends State<_AiTutorView> {
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
-          Material(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(24),
-            child: InkWell(
+          Semantics(
+            button: true,
+            label: 'Send message',
+            child: Material(
+              color: AppColors.primary,
               borderRadius: BorderRadius.circular(24),
-              onTap: _sendMessage,
-              child: const Padding(
-                padding: EdgeInsets.all(10),
-                child: Icon(
-                  Icons.send_rounded,
-                  color: Colors.white,
-                  size: 22,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(24),
+                onTap: _sendMessage,
+                child: const Padding(
+                  padding: EdgeInsets.all(13),
+                  child: Icon(
+                    Icons.send_rounded,
+                    color: Colors.white,
+                    size: 22,
+                  ),
                 ),
               ),
             ),
@@ -394,9 +399,7 @@ class _MessageBubble extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isUser
                     ? AppColors.primary
-                    : Theme.of(context).brightness == Brightness.dark
-                        ? AppColors.darkSurface
-                        : const Color(0xFFF0F0F0),
+                    : Theme.of(context).colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(16),
                   topRight: const Radius.circular(16),
@@ -494,9 +497,7 @@ class _TypingIndicatorState extends State<_TypingIndicator>
               vertical: AppSpacing.sm + 4,
             ),
             decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? AppColors.darkSurface
-                  : const Color(0xFFF0F0F0),
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
@@ -520,7 +521,7 @@ class _TypingIndicatorState extends State<_TypingIndicator>
                     width: 8,
                     height: 8,
                     decoration: BoxDecoration(
-                      color: AppColors.textSecondary.withValues(alpha: 0.5),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                       shape: BoxShape.circle,
                     ),
                   ),
