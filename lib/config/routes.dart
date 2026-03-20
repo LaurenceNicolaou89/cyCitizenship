@@ -8,6 +8,7 @@ import '../features/flashcards/screens/flashcards_screen.dart';
 import '../features/ai_tutor/screens/ai_tutor_screen.dart';
 import '../features/ai_practice/screens/ai_practice_screen.dart';
 import '../features/greek_practice/screens/greek_practice_screen.dart';
+import '../core/services/gemini_service.dart';
 import '../features/exam_info/screens/exam_info_screen.dart';
 import '../features/exam_info/screens/exam_map_screen.dart';
 import '../features/checklist/screens/checklist_screen.dart';
@@ -88,11 +89,15 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/ai-practice',
-      builder: (context, state) => const AiPracticeScreen(),
+      builder: (context, state) => AiPracticeScreen(
+        geminiService: GeminiService(apiKey: const String.fromEnvironment('GEMINI_API_KEY', defaultValue: '')),
+      ),
     ),
     GoRoute(
       path: '/greek-practice',
-      builder: (context, state) => const GreekPracticeScreen(),
+      builder: (context, state) => GreekPracticeScreen(
+        geminiService: GeminiService(apiKey: const String.fromEnvironment('GEMINI_API_KEY', defaultValue: '')),
+      ),
     ),
     GoRoute(
       path: '/exam-map',
