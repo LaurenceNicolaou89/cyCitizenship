@@ -91,9 +91,9 @@
 ## Epic 6: Flashcards
 | ID | Title | Agent | Status | Priority |
 |----|-------|-------|--------|----------|
-| CYC-025 | Flashcard BLoC & spaced repetition logic | Backend Dev | pending | P1 |
-| CYC-026 | Flashcard UI (swipeable cards, flip animation) | Frontend Dev | pending | P1 |
-| CYC-027 | Flashcard progress tracking | Backend Dev | pending | P1 |
+| CYC-025 | Flashcard BLoC & spaced repetition logic | Backend Dev | done | P1 |
+| CYC-026 | Flashcard UI (swipeable cards, flip animation) | Frontend Dev | done | P1 |
+| CYC-027 | Flashcard progress tracking | Backend Dev | done | P1 |
 
 ### Acceptance Criteria
 - **CYC-025**: Modified Leitner system (5 boxes), cards advance/demote on correct/incorrect. Category and mixed modes
@@ -105,12 +105,12 @@
 ## Epic 7: AI Features
 | ID | Title | Agent | Status | Priority |
 |----|-------|-------|--------|----------|
-| CYC-028 | Gemini Flash service layer | Backend Dev | pending | P0 |
-| CYC-029 | AI Tutor chatbot screen & BLoC | Frontend Dev | pending | P0 |
-| CYC-030 | AI Tutor system prompt & Cyprus knowledge base | Backend Dev | pending | P0 |
-| CYC-031 | AI Smart Practice screen & question generation | Frontend Dev | pending | P1 |
-| CYC-032 | AI Greek Language Practice screen | Frontend Dev | pending | P1 |
-| CYC-033 | AI rate limiting (free: 3/day, paid: 50/day) | Backend Dev | pending | P0 |
+| CYC-028 | Gemini Flash service layer | Backend Dev | done | P0 |
+| CYC-029 | AI Tutor chatbot screen & BLoC | Frontend Dev | done | P0 |
+| CYC-030 | AI Tutor system prompt & Cyprus knowledge base | Backend Dev | done | P0 |
+| CYC-031 | AI Smart Practice screen & question generation | Frontend Dev | done | P1 |
+| CYC-032 | AI Greek Language Practice screen | Frontend Dev | done | P1 |
+| CYC-033 | AI rate limiting (free: 3/day, paid: 50/day) | Backend Dev | done | P0 |
 
 ### Acceptance Criteria
 - **CYC-028**: GeminiService class wrapping `google_generative_ai` package. Handles streaming responses, error handling, retry logic. Configurable system prompts
@@ -125,10 +125,10 @@
 ## Epic 8: Exam Info & Checklist
 | ID | Title | Agent | Status | Priority |
 |----|-------|-------|--------|----------|
-| CYC-034 | Exam dates screen with countdown & reminders | Frontend Dev | pending | P1 |
-| CYC-035 | Exam center map (Google Maps integration) | Frontend Dev | pending | P1 |
-| CYC-036 | Application checklist screen & document tracker | Frontend Dev | pending | P1 |
-| CYC-037 | Checklist BLoC & Firestore sync | Backend Dev | pending | P1 |
+| CYC-034 | Exam dates screen with countdown & reminders | Frontend Dev | done | P1 |
+| CYC-035 | Exam center map (Google Maps integration) | Frontend Dev | done | P1 |
+| CYC-036 | Application checklist screen & document tracker | Frontend Dev | done | P1 |
+| CYC-037 | Checklist BLoC & Firestore sync | Backend Dev | done | P1 |
 
 ### Acceptance Criteria
 - **CYC-034**: List of upcoming/past exams, countdown to next, registration window dates. Tap to set reminder (FCM)
@@ -141,8 +141,8 @@
 ## Epic 9: Weak Area Heatmap & Stats
 | ID | Title | Agent | Status | Priority |
 |----|-------|-------|--------|----------|
-| CYC-038 | Category stats tracking BLoC | Backend Dev | pending | P1 |
-| CYC-039 | Heatmap visualization screen | Frontend Dev | pending | P1 |
+| CYC-038 | Category stats tracking BLoC | Backend Dev | done | P1 |
+| CYC-039 | Heatmap visualization screen | Frontend Dev | done | P1 |
 
 ### Acceptance Criteria
 - **CYC-038**: Tracks total answered/correct per category in `user_progress/category_stats/`. Updates after every answer
@@ -153,10 +153,10 @@
 ## Epic 10: Profile, Settings & Gamification
 | ID | Title | Agent | Status | Priority |
 |----|-------|-------|--------|----------|
-| CYC-040 | Profile screen (stats overview, badges, settings) | Frontend Dev | pending | P1 |
-| CYC-041 | Badge system (milestones & awards) | Backend Dev | pending | P2 |
-| CYC-042 | Study streak logic with notifications | Backend Dev | pending | P1 |
-| CYC-043 | Settings (language, notifications, dark mode) | Frontend Dev | pending | P1 |
+| CYC-040 | Profile screen (stats overview, badges, settings) | Frontend Dev | done | P1 |
+| CYC-041 | Badge system (milestones & awards) | Backend Dev | done | P2 |
+| CYC-042 | Study streak logic with notifications | Backend Dev | done | P1 |
+| CYC-043 | Settings (language, notifications, dark mode) | Frontend Dev | done | P1 |
 
 ### Acceptance Criteria
 - **CYC-040**: Profile shows avatar, name, streak, total questions answered, average score, badge collection, subscription status
@@ -169,11 +169,11 @@
 ## Epic 11: Payments & Subscription
 | ID | Title | Agent | Status | Priority |
 |----|-------|-------|--------|----------|
-| CYC-044 | Paywall/upgrade screen | Frontend Dev | pending | P0 |
-| CYC-045 | Play Store billing integration (Android) | Backend Dev | pending | P0 |
-| CYC-046 | App Store billing integration (iOS) | Backend Dev | pending | P0 |
-| CYC-047 | Purchase verification Cloud Function | Backend Dev | pending | P0 |
-| CYC-048 | Restore purchase flow | Backend Dev | pending | P1 |
+| CYC-044 | Paywall/upgrade screen | Frontend Dev | done | P0 |
+| CYC-045 | Play Store billing integration (Android) | Backend Dev | done | P0 |
+| CYC-046 | App Store billing integration (iOS) | Backend Dev | done | P0 |
+| CYC-047 | Purchase verification Cloud Function | Backend Dev | done | P0 |
+| CYC-048 | Restore purchase flow | Backend Dev | done | P1 |
 
 ### Acceptance Criteria
 - **CYC-044**: Benefits list, €20 one-time price, platform billing button. Non-intrusive — shown at paywall moments, not forced
