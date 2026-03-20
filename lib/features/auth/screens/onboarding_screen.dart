@@ -18,6 +18,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   String _selectedRoute = 'general';
   final _pageController = PageController();
 
+  @override
+  void initState() {
+    super.initState();
+    _checkOnboardingStatus();
+  }
+
+  Future<void> _checkOnboardingStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final onboardingComplete = prefs.getBool('onboarding_complete') ?? false;
+    if (onboardingComplete && mounted) {
+      context.go('/home');
+    }
+  }
+
   static const _languages = [
     {'code': 'en', 'name': 'English', 'flag': '\u{1F1EC}\u{1F1E7}'},
     {'code': 'ru', 'name': '\u0420\u0443\u0441\u0441\u043A\u0438\u0439', 'flag': '\u{1F1F7}\u{1F1FA}'},

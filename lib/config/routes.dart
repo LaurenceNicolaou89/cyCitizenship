@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/services/gemini_service.dart';
 import '../features/home/screens/home_screen.dart';
@@ -26,23 +25,15 @@ import '../shared/widgets/app_shell.dart';
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
-final router = GoRouter(
+GoRouter createRouter({required bool onboardingComplete}) => GoRouter(
   navigatorKey: _rootNavigatorKey,
-  initialLocation: '/home',
-  redirect: (context, state) async {
+  initialLocation: onboardingComplete ? '/home' : '/onboarding',
+  redirect: (context, state) {
     final authState = context.read<AuthBloc>().state;
     final location = state.uri.path;
 
-    // Check if onboarding is complete
-    final prefs = await SharedPreferences.getInstance();
-    final onboardingComplete = prefs.getBool('onboarding_complete') ?? false;
-
     // Allow access to onboarding and login without auth
     final isAuthRoute = location == '/onboarding' || location == '/login';
-
-    if (!onboardingComplete && !isAuthRoute) {
-      return '/onboarding';
-    }
 
     // If unauthenticated (not guest), redirect to login
     if (authState is AuthUnauthenticated && !isAuthRoute) {
