@@ -91,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Text(
                     'Your path to Cyprus citizenship',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                     textAlign: TextAlign.center,
                   ),
@@ -143,6 +143,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ? Icons.visibility_off
                             : Icons.visibility,
                       ),
+                      tooltip: _obscurePassword ? 'Show password' : 'Hide password',
                       onPressed: () {
                         setState(() {
                           _obscurePassword = !_obscurePassword;

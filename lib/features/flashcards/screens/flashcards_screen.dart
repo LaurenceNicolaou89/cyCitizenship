@@ -131,21 +131,21 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
               ),
               Row(
                 children: [
-                  Icon(Icons.check_circle, color: AppColors.success, size: 18),
+                  const Icon(Icons.check_circle, color: AppColors.success, size: 18),
                   const SizedBox(width: 4),
                   Text(
                     '${state.correctCount}',
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: AppColors.success,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(width: AppSpacing.md),
-                  Icon(Icons.cancel, color: AppColors.error, size: 18),
+                  const Icon(Icons.cancel, color: AppColors.error, size: 18),
                   const SizedBox(width: 4),
                   Text(
                     '${state.incorrectCount}',
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: AppColors.error,
                       fontWeight: FontWeight.w600,
                     ),
@@ -163,7 +163,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
             value: state.totalCards > 0
                 ? (state.currentIndex + 1) / state.totalCards
                 : 0,
-            backgroundColor: AppColors.border,
+            backgroundColor: Theme.of(context).colorScheme.outlineVariant,
             valueColor:
                 const AlwaysStoppedAnimation<Color>(AppColors.primary),
             borderRadius: BorderRadius.circular(4),
@@ -217,7 +217,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
           child: Text(
             'Tap to flip, swipe to answer',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textSecondary,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
           ),
         ),
@@ -308,7 +308,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
             Text(
               'You reviewed ${state.reviewed} cards',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppColors.textSecondary,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
             ),
             const SizedBox(height: AppSpacing.xl),
@@ -543,7 +543,7 @@ class _FlashcardWidget extends StatelessWidget {
                         _categoryColor.withValues(alpha: 0.15),
                       ]
                     : [
-                        Colors.white,
+                        Theme.of(context).colorScheme.surface,
                         _categoryColor.withValues(alpha: 0.05),
                       ],
               ),
@@ -568,7 +568,7 @@ class _FlashcardWidget extends StatelessWidget {
                             size: 10,
                             color: i <= boxLevel
                                 ? _categoryColor
-                                : AppColors.border,
+                                : Theme.of(context).colorScheme.outlineVariant,
                           ),
                         );
                       }),
@@ -614,7 +614,7 @@ class _FlashcardWidget extends StatelessWidget {
                 Text(
                   isBack ? 'Swipe or tap buttons below' : 'Tap to reveal answer',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                 ),
               ],

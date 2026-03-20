@@ -37,6 +37,7 @@ class _HomeScreenView extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
+            tooltip: 'Notifications',
             onPressed: () {
               // TODO: Navigate to notifications
             },
@@ -183,7 +184,7 @@ class _ExamCountdownCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 8,
-              backgroundColor: AppColors.border,
+              backgroundColor: Theme.of(context).colorScheme.outlineVariant,
               valueColor:
                   const AlwaysStoppedAnimation<Color>(AppColors.primary),
             ),
@@ -257,7 +258,7 @@ class _DailyQuestionCard extends StatelessWidget {
               ],
             ),
           ),
-          const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+          Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurfaceVariant),
         ],
       ),
     );

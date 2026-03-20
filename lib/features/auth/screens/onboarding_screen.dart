@@ -89,7 +89,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           Text(
             'Your path to Cyprus citizenship.\nPractice for the culture & politics exam with AI-powered tools.',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: AppColors.textSecondary,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
             textAlign: TextAlign.center,
           ),
@@ -141,7 +141,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           Text(
             'This determines your exam pass threshold and document checklist.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
             textAlign: TextAlign.center,
           ),
@@ -182,7 +182,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 decoration: BoxDecoration(
                   color: _currentPage == index
                       ? Theme.of(context).colorScheme.primary
-                      : AppColors.border,
+                      : Theme.of(context).colorScheme.outlineVariant,
                   borderRadius: BorderRadius.circular(4),
                 ),
               );
@@ -234,22 +234,25 @@ class _LanguageOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: selected ? AppColors.primary : AppColors.border,
-            width: selected ? 2 : 1,
+    return Semantics(
+      button: true,
+      label: '$name language option${selected ? ', selected' : ''}',
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: selected ? AppColors.primary : Theme.of(context).colorScheme.outlineVariant,
+              width: selected ? 2 : 1,
+            ),
+            borderRadius: BorderRadius.circular(12),
+            color: selected ? AppColors.primary.withValues(alpha: 0.05) : null,
           ),
-          borderRadius: BorderRadius.circular(12),
-          color: selected ? AppColors.primary.withValues(alpha: 0.05) : null,
-        ),
-        child: Row(
-          children: [
-            Text(flag, style: const TextStyle(fontSize: 28)),
+          child: Row(
+            children: [
+              Text(flag, style: const TextStyle(fontSize: 28)),
             const SizedBox(width: AppSpacing.md),
             Text(
               name,
@@ -259,6 +262,7 @@ class _LanguageOption extends StatelessWidget {
             if (selected)
               const Icon(Icons.check_circle, color: AppColors.primary),
           ],
+        ),
         ),
       ),
     );
@@ -282,22 +286,25 @@ class _RouteOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: selected ? AppColors.primary : AppColors.border,
-            width: selected ? 2 : 1,
+    return Semantics(
+      button: true,
+      label: '$title route option${selected ? ', selected' : ''}',
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: selected ? AppColors.primary : Theme.of(context).colorScheme.outlineVariant,
+              width: selected ? 2 : 1,
+            ),
+            borderRadius: BorderRadius.circular(12),
+            color: selected ? AppColors.primary.withValues(alpha: 0.05) : null,
           ),
-          borderRadius: BorderRadius.circular(12),
-          color: selected ? AppColors.primary.withValues(alpha: 0.05) : null,
-        ),
-        child: Row(
-          children: [
-            Icon(icon, size: 32, color: AppColors.primary),
+          child: Row(
+            children: [
+              Icon(icon, size: 32, color: AppColors.primary),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
@@ -316,6 +323,7 @@ class _RouteOption extends StatelessWidget {
             if (selected)
               const Icon(Icons.check_circle, color: AppColors.primary),
           ],
+        ),
         ),
       ),
     );
