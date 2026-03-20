@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/services/gemini_service.dart';
 import '../features/home/screens/home_screen.dart';
 import '../features/exam_simulator/screens/exam_simulator_screen.dart';
 import '../features/exam_simulator/screens/exam_results_screen.dart';
@@ -8,7 +11,6 @@ import '../features/flashcards/screens/flashcards_screen.dart';
 import '../features/ai_tutor/screens/ai_tutor_screen.dart';
 import '../features/ai_practice/screens/ai_practice_screen.dart';
 import '../features/greek_practice/screens/greek_practice_screen.dart';
-import '../core/services/gemini_service.dart';
 import '../features/exam_info/screens/exam_info_screen.dart';
 import '../features/exam_info/screens/exam_map_screen.dart';
 import '../features/checklist/screens/checklist_screen.dart';
@@ -17,6 +19,8 @@ import '../features/keep_learning/screens/keep_learning_screen.dart';
 import '../features/heatmap/screens/heatmap_screen.dart';
 import '../features/auth/screens/login_screen.dart';
 import '../features/auth/screens/onboarding_screen.dart';
+import '../features/auth/bloc/auth_bloc.dart';
+import '../features/auth/bloc/auth_state.dart';
 import '../shared/widgets/app_shell.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -25,6 +29,34 @@ final _shellNavigatorKey = GlobalKey<NavigatorState>();
 final router = GoRouter(
   navigatorKey: _rootNavigatorKey,
   initialLocation: '/home',
+  redirect: (context, state) async {
+    final authState = context.read<AuthBloc>().state;
+    final location = state.uri.path;
+
+    // Check if onboarding is complete
+    final prefs = await SharedPreferences.getInstance();
+    final onboardingComplete = prefs.getBool('onboarding_complete') ?? false;
+
+    // Allow access to onboarding and login without auth
+    final isAuthRoute = location == '/onboarding' || location == '/login';
+
+    if (!onboardingComplete && !isAuthRoute) {
+      return '/onboarding';
+    }
+
+    // If unauthenticated (not guest), redirect to login
+    if (authState is AuthUnauthenticated && !isAuthRoute) {
+      return '/login';
+    }
+
+    // If authenticated and on auth route, redirect to home
+    if ((authState is AuthAuthenticated || authState is AuthGuest) &&
+        isAuthRoute) {
+      return '/home';
+    }
+
+    return null;
+  },
   routes: [
     // Onboarding & Auth (no bottom nav)
     GoRoute(
@@ -90,13 +122,13 @@ final router = GoRouter(
     GoRoute(
       path: '/ai-practice',
       builder: (context, state) => AiPracticeScreen(
-        geminiService: GeminiService(apiKey: const String.fromEnvironment('GEMINI_API_KEY', defaultValue: '')),
+        geminiService: context.read<GeminiService>(),
       ),
     ),
     GoRoute(
       path: '/greek-practice',
       builder: (context, state) => GreekPracticeScreen(
-        geminiService: GeminiService(apiKey: const String.fromEnvironment('GEMINI_API_KEY', defaultValue: '')),
+        geminiService: context.read<GeminiService>(),
       ),
     ),
     GoRoute(

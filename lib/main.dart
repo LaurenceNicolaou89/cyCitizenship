@@ -14,5 +14,17 @@ void main() async {
 
   await Hive.initFlutter();
 
+  // Open all required Hive boxes (H-1, H-7)
+  await Future.wait([
+    Hive.openBox('questions'),
+    Hive.openBox('pending_sync'),
+    Hive.openBox('flashcards'),
+  ]);
+
+  // Global error handling (L-6)
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+  };
+
   runApp(const CyCitizenshipApp());
 }

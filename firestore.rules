@@ -9,9 +9,15 @@ service cloud.firestore {
     }
 
     // Users: can only read/write own document
+    // isPremium and purchaseDate can only be set by Cloud Functions
     match /users/{userId} {
-      allow read, update: if request.auth != null && request.auth.uid == userId;
-      allow create: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId
+        && !request.resource.data.keys().hasAny(['isPremium', 'purchaseDate'])
+        || (request.resource.data.isPremium == false);
+      allow update: if request.auth != null && request.auth.uid == userId
+        && !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['isPremium', 'purchaseDate']);
       allow delete: if request.auth != null && request.auth.uid == userId;
     }
 

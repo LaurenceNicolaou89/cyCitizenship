@@ -5,6 +5,7 @@ import 'config/theme.dart';
 import 'config/routes.dart';
 import 'core/services/auth_service.dart';
 import 'core/services/firestore_service.dart';
+import 'core/services/gemini_service.dart';
 import 'core/services/question_repository.dart';
 import 'core/services/progress_sync_service.dart';
 import 'core/services/notification_service.dart';
@@ -16,16 +17,32 @@ import 'features/auth/bloc/auth_event.dart';
 class CyCitizenshipApp extends StatelessWidget {
   const CyCitizenshipApp({super.key});
 
+  static const _geminiApiKey = String.fromEnvironment(
+    'GEMINI_API_KEY',
+    defaultValue: '',
+  );
+
   @override
   Widget build(BuildContext context) {
     return MultiRepositoryProvider(
       providers: [
         RepositoryProvider(create: (_) => AuthService()),
         RepositoryProvider(create: (_) => FirestoreService()),
-        RepositoryProvider(create: (_) => QuestionRepository()),
-        RepositoryProvider(create: (_) => ProgressSyncService()),
-        RepositoryProvider(create: (_) => NotificationService()),
-        RepositoryProvider(create: (_) => BillingService()),
+        RepositoryProvider(
+          create: (_) => GeminiService(apiKey: _geminiApiKey),
+        ),
+        RepositoryProvider(
+          create: (_) => QuestionRepository()..initialize(),
+        ),
+        RepositoryProvider(
+          create: (_) => ProgressSyncService()..initialize(),
+        ),
+        RepositoryProvider(
+          create: (_) => NotificationService()..initialize(),
+        ),
+        RepositoryProvider(
+          create: (_) => BillingService()..initialize(),
+        ),
         RepositoryProvider(create: (_) => AnalyticsService()),
       ],
       child: BlocProvider(

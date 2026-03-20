@@ -10,14 +10,26 @@ import '../bloc/flashcards_bloc.dart';
 import '../bloc/flashcards_event.dart';
 import '../bloc/flashcards_state.dart';
 
-class FlashcardsScreen extends StatefulWidget {
+class FlashcardsScreen extends StatelessWidget {
   const FlashcardsScreen({super.key});
 
   @override
-  State<FlashcardsScreen> createState() => _FlashcardsScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => FlashcardsBloc()..add(const LoadFlashcards()),
+      child: const _FlashcardsView(),
+    );
+  }
 }
 
-class _FlashcardsScreenState extends State<FlashcardsScreen> {
+class _FlashcardsView extends StatefulWidget {
+  const _FlashcardsView();
+
+  @override
+  State<_FlashcardsView> createState() => _FlashcardsViewState();
+}
+
+class _FlashcardsViewState extends State<_FlashcardsView> {
   String? _selectedCategory;
   final CardSwiperController _swiperController = CardSwiperController();
 
@@ -32,12 +44,6 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
       'color': AppColors.dailyLife
     },
   ];
-
-  @override
-  void initState() {
-    super.initState();
-    context.read<FlashcardsBloc>().add(const LoadFlashcards());
-  }
 
   @override
   void dispose() {

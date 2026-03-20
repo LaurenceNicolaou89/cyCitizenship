@@ -1,9 +1,14 @@
+import 'dart:async';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class NotificationService {
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+
+  StreamSubscription<String>? _tokenRefreshSub;
+  StreamSubscription<RemoteMessage>? _foregroundSub;
+  StreamSubscription<RemoteMessage>? _messageOpenedSub;
 
   Future<void> initialize() async {
     final settings = await _messaging.requestPermission(
@@ -18,8 +23,7 @@ class NotificationService {
         _fcmToken = token;
       }
 
-      // Listen for token refresh
-      _messaging.onTokenRefresh.listen((newToken) {
+      _tokenRefreshSub = _messaging.onTokenRefresh.listen((newToken) {
         _fcmToken = newToken;
         if (_userId != null) {
           _saveTokenToFirestore(_userId!, newToken);
@@ -27,10 +31,11 @@ class NotificationService {
       });
     }
 
-    FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
-    FirebaseMessaging.onMessageOpenedApp.listen(_handleMessageOpenedApp);
+    _foregroundSub =
+        FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
+    _messageOpenedSub =
+        FirebaseMessaging.onMessageOpenedApp.listen(_handleMessageOpenedApp);
 
-    // Check for initial message (app opened from terminated state)
     final initialMessage = await _messaging.getInitialMessage();
     if (initialMessage != null) {
       _handleMessageOpenedApp(initialMessage);
@@ -57,8 +62,7 @@ class NotificationService {
   }
 
   void _handleForegroundMessage(RemoteMessage message) {
-    // Foreground messages are handled by the app UI
-    // Could show a local notification or in-app banner
+    // Foreground messages handled by app UI
   }
 
   void _handleMessageOpenedApp(RemoteMessage message) {
@@ -87,5 +91,11 @@ class NotificationService {
   Future<void> unsubscribeFromAll() async {
     await unsubscribeFromTopic('exam_reminders');
     await unsubscribeFromTopic('daily_questions');
+  }
+
+  void dispose() {
+    _tokenRefreshSub?.cancel();
+    _foregroundSub?.cancel();
+    _messageOpenedSub?.cancel();
   }
 }
