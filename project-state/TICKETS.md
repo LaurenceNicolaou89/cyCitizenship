@@ -225,9 +225,9 @@
 ## Epic 15: Testing & Polish
 | ID | Title | Agent | Status | Priority |
 |----|-------|-------|--------|----------|
-| CYC-056 | Unit tests for all BLoCs | QA | pending | P1 |
-| CYC-057 | Widget tests for key screens | QA | pending | P1 |
-| CYC-058 | Integration tests (auth, purchase, exam flow) | QA | pending | P1 |
+| CYC-056 | Unit tests for all BLoCs | QA | done | P1 |
+| CYC-057 | Widget tests for key screens | QA | done | P1 |
+| CYC-058 | Integration tests (auth, purchase, exam flow) | QA | done | P1 |
 | CYC-059 | Dark mode verification all screens | QA | pending | P2 |
 | CYC-060 | Accessibility audit (WCAG 2.1 AA) | QA | pending | P2 |
 | CYC-061 | Performance optimization & app size | DevOps | pending | P2 |
