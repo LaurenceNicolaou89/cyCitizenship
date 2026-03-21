@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../config/theme.dart';
 import '../../../core/models/user_model.dart';
 import '../../../core/services/firestore_service.dart';
 import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/paywall_screen.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/bloc/auth_event.dart';
 import '../../auth/bloc/auth_state.dart';
@@ -32,6 +34,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // User model from Firestore
   UserModel? _userModel;
 
+  // Exam target date
+  DateTime? _examDate;
+
   // Loading flag
   bool _isLoading = true;
 
@@ -51,6 +56,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   static const _keyDarkMode = 'profile_dark_mode';
   static const _keyNotifications = 'profile_notifications';
   static const _keyLanguage = 'profile_language';
+  static const _keyExamDate = 'profile_exam_date';
 
   @override
   void initState() {
@@ -62,10 +68,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
+    final examDateMs = prefs.getInt(_keyExamDate);
     setState(() {
       _darkModeEnabled = prefs.getBool(_keyDarkMode) ?? false;
       _notificationsEnabled = prefs.getBool(_keyNotifications) ?? true;
       _selectedLanguage = prefs.getString(_keyLanguage) ?? 'English';
+      if (examDateMs != null) {
+        _examDate = DateTime.fromMillisecondsSinceEpoch(examDateMs);
+      }
     });
   }
 
@@ -238,7 +248,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         height: 36,
                         child: ElevatedButton(
                           onPressed: () {
-                            // TODO: Navigate to paywall
+                            PaywallScreen.show(context);
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.secondary,
@@ -342,13 +352,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       leading: const Icon(Icons.calendar_month),
                       title: const Text('Exam Target Date'),
                       trailing: Text(
-                        _userModel?.examTarget ?? 'Not set',
+                        _examDate != null
+                            ? DateFormat('MMM d, yyyy').format(_examDate!)
+                            : 'Not set',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: AppColors.primary,
                         ),
                       ),
-                      onTap: () {
-                        // TODO: Date picker
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: _examDate ?? DateTime.now().add(const Duration(days: 90)),
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime.now().add(const Duration(days: 365 * 3)),
+                          helpText: 'Select your exam target date',
+                        );
+                        if (picked != null && mounted) {
+                          setState(() => _examDate = picked);
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.setInt(_keyExamDate, picked.millisecondsSinceEpoch);
+                        }
                       },
                     ),
                   ],

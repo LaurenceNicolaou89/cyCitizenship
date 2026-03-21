@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../config/theme.dart';
+import '../../../core/models/question_model.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../bloc/exam_simulator_bloc.dart';
@@ -171,7 +172,7 @@ class _ExamResultsViewState extends State<ExamResultsView>
               icon: Icons.visibility,
               variant: AppButtonVariant.secondary,
               onPressed: () {
-                // TODO: Navigate to answer review screen
+                _showAnswerReview(context, result);
               },
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -191,6 +192,18 @@ class _ExamResultsViewState extends State<ExamResultsView>
             const SizedBox(height: AppSpacing.lg),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showAnswerReview(BuildContext context, ExamCompleted result) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _AnswerReviewSheet(
+        questions: result.questions,
+        answers: result.answers,
       ),
     );
   }
@@ -438,6 +451,187 @@ class _RecommendationCard extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AnswerReviewSheet extends StatelessWidget {
+  final List<QuestionModel> questions;
+  final Map<int, int> answers;
+
+  const _AnswerReviewSheet({
+    required this.questions,
+    required this.answers,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.85,
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        children: [
+          // Handle bar
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.md),
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.outlineVariant,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Text(
+              'Answer Review',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+          ),
+          const Divider(height: 0),
+          Expanded(
+            child: ListView.separated(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              itemCount: questions.length,
+              separatorBuilder: (_, _) => const Divider(height: AppSpacing.lg),
+              itemBuilder: (context, index) {
+                final question = questions[index];
+                final selectedIndex = answers[index];
+                final isCorrect = selectedIndex == question.correctIndex;
+                final wasAnswered = selectedIndex != null;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Question number and status
+                    Row(
+                      children: [
+                        Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: !wasAnswered
+                                ? AppColors.disabled.withValues(alpha: 0.2)
+                                : isCorrect
+                                    ? AppColors.success.withValues(alpha: 0.2)
+                                    : AppColors.error.withValues(alpha: 0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              '${index + 1}',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: !wasAnswered
+                                    ? AppColors.disabled
+                                    : isCorrect
+                                        ? AppColors.success
+                                        : AppColors.error,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Text(
+                            question.textEn,
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+
+                    // Options
+                    ...List.generate(question.options.length, (optIndex) {
+                      final isSelected = selectedIndex == optIndex;
+                      final isCorrectOption = optIndex == question.correctIndex;
+
+                      Color? bgColor;
+                      Color? borderColor;
+                      if (isCorrectOption) {
+                        bgColor = AppColors.success.withValues(alpha: 0.1);
+                        borderColor = AppColors.success;
+                      } else if (isSelected && !isCorrect) {
+                        bgColor = AppColors.error.withValues(alpha: 0.1);
+                        borderColor = AppColors.error;
+                      }
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                            vertical: AppSpacing.sm,
+                          ),
+                          decoration: BoxDecoration(
+                            color: bgColor,
+                            border: borderColor != null
+                                ? Border.all(color: borderColor)
+                                : Border.all(
+                                    color: Theme.of(context).colorScheme.outlineVariant,
+                                  ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  question.options[optIndex].textEn,
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ),
+                              if (isCorrectOption)
+                                const Icon(Icons.check_circle, color: AppColors.success, size: 20),
+                              if (isSelected && !isCorrect)
+                                const Icon(Icons.cancel, color: AppColors.error, size: 20),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+
+                    // Explanation
+                    if (question.getExplanation('en').isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(AppSpacing.sm),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.lightbulb_outline, size: 18, color: AppColors.primary),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: Text(
+                                question.getExplanation('en'),
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                );
+              },
             ),
           ),
         ],

@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../config/theme.dart';
 import '../../../core/services/gemini_service.dart';
+import '../../../shared/widgets/paywall_screen.dart';
 import '../bloc/ai_tutor_bloc.dart';
 import '../bloc/ai_tutor_event.dart';
 import '../bloc/ai_tutor_state.dart';
@@ -345,7 +346,7 @@ class _AiTutorViewState extends State<_AiTutorView> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                // TODO: Navigate to subscription screen
+                PaywallScreen.show(context);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.secondary,
