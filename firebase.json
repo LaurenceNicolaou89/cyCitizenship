@@ -1,1 +1,38 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"keeplearningcyexams","appId":"1:849643869429:android:ed55b61661700eacd2e1bc","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"keeplearningcyexams","configurations":{"android":"1:849643869429:android:ed55b61661700eacd2e1bc","ios":"1:849643869429:ios:56b3c6a21ae4cb76d2e1bc"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "keeplearningcyexams",
+          "appId": "1:849643869429:android:ed55b61661700eacd2e1bc",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "keeplearningcyexams",
+          "configurations": {
+            "android": "1:849643869429:android:ed55b61661700eacd2e1bc",
+            "ios": "1:849643869429:ios:56b3c6a21ae4cb76d2e1bc"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run build"
+      ]
+    }
+  ]
+}

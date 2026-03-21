@@ -19,20 +19,13 @@ class CyCitizenshipApp extends StatelessWidget {
 
   final bool onboardingComplete;
 
-  static const _geminiApiKey = String.fromEnvironment(
-    'GEMINI_API_KEY',
-    defaultValue: '',
-  );
-
   @override
   Widget build(BuildContext context) {
     return MultiRepositoryProvider(
       providers: [
         RepositoryProvider(create: (_) => AuthService()),
         RepositoryProvider(create: (_) => FirestoreService()),
-        RepositoryProvider(
-          create: (_) => GeminiService(apiKey: _geminiApiKey),
-        ),
+        RepositoryProvider(create: (_) => GeminiService()),
         RepositoryProvider(
           create: (_) => QuestionRepository()..initialize(),
         ),

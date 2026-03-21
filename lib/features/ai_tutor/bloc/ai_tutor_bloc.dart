@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
 
 import '../../../core/services/gemini_service.dart';
 import 'ai_tutor_event.dart';
@@ -9,7 +8,7 @@ class AiTutorBloc extends Bloc<AiTutorEvent, AiTutorState> {
   final GeminiService _geminiService;
   final bool isPremium;
 
-  List<ChatMessage> _messages = [];
+  List<AiTutorChatMessage> _messages = [];
   int _messagesUsedToday = 0;
   DateTime _lastResetDate = DateTime.now();
 
@@ -49,7 +48,7 @@ class AiTutorBloc extends Bloc<AiTutorEvent, AiTutorState> {
       return;
     }
 
-    final userMessage = ChatMessage(
+    final userMessage = AiTutorChatMessage(
       role: 'user',
       content: event.message,
       timestamp: DateTime.now(),
@@ -64,18 +63,19 @@ class AiTutorBloc extends Bloc<AiTutorEvent, AiTutorState> {
           ? _messages
               .sublist(0, _messages.length - 1)
               .where((m) => m.role == 'user' || m.role == 'assistant')
-              .map((m) => Content(m.role == 'user' ? 'user' : 'model', [
-                    TextPart(m.content),
-                  ]))
+              .map((m) => ChatMessage(
+                    role: m.role == 'user' ? 'user' : 'model',
+                    content: m.content,
+                  ))
               .toList()
-          : <Content>[];
+          : <ChatMessage>[];
 
       final response = await _geminiService.chatWithTutor(
         history,
         event.message,
       );
 
-      final assistantMessage = ChatMessage(
+      final assistantMessage = AiTutorChatMessage(
         role: 'assistant',
         content: response,
         timestamp: DateTime.now(),

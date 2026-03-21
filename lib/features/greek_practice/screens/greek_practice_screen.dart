@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
 
 import '../../../config/theme.dart';
 import '../../../core/services/gemini_service.dart';
@@ -67,14 +66,15 @@ class _GreekPracticeScreenState extends State<GreekPracticeScreen> {
     }
   }
 
-  List<Content> _buildHistory() {
+  List<ChatMessage> _buildHistory() {
     // Exclude the last user message (it will be sent as the new message)
     final historyMessages =
         _messages.length > 1 ? _messages.sublist(0, _messages.length - 1) : [];
     return historyMessages
-        .map((m) => Content(m.isUser ? 'user' : 'model', [
-              TextPart(m.content),
-            ]))
+        .map((m) => ChatMessage(
+              role: m.isUser ? 'user' : 'model',
+              content: m.content,
+            ))
         .toList();
   }
 
