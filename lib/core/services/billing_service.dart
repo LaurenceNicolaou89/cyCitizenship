@@ -58,9 +58,15 @@ class BillingService {
   Future<void> buyPremium() async {
     if (_products.isEmpty) return;
 
-    final productDetails = _products.firstWhere(
-      (p) => p.id == premiumProductId,
+    final productDetails = _products.cast<ProductDetails?>().firstWhere(
+      (p) => p!.id == premiumProductId,
+      orElse: () => null,
     );
+
+    if (productDetails == null) {
+      _purchaseController.add(PurchaseStatus.error);
+      return;
+    }
 
     final purchaseParam = PurchaseParam(productDetails: productDetails);
     await _iap.buyNonConsumable(purchaseParam: purchaseParam);
