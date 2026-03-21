@@ -263,6 +263,7 @@ class _InExamView extends StatelessWidget {
   Widget build(BuildContext context) {
     final question = state.currentQuestion;
     final labels = ['A', 'B', 'C', 'D'];
+    final locale = Localizations.localeOf(context).languageCode;
 
     return Scaffold(
       appBar: AppBar(
@@ -302,7 +303,7 @@ class _InExamView extends StatelessWidget {
                 children: [
                   // Question text
                   Text(
-                    question.getText('en'),
+                    question.getText(locale),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           height: 1.4,
                         ),
@@ -314,7 +315,7 @@ class _InExamView extends StatelessWidget {
                     final isSelected = state.selectedIndex == index;
                     return AnswerOption(
                       label: index < labels.length ? labels[index] : '$index',
-                      text: question.options[index].getText('en'),
+                      text: question.options[index].getText(locale),
                       state: isSelected
                           ? AnswerState.selected
                           : AnswerState.idle,
