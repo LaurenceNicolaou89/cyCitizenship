@@ -16,10 +16,13 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => HomeBloc()..add(const LoadHome()),
-      child: const _HomeScreenView(),
-    );
+    // Refresh home data each time the screen is shown.
+    // HomeBloc is provided at the app level for route guard access.
+    final homeBloc = context.read<HomeBloc>();
+    if (homeBloc.state is! HomeLoaded) {
+      homeBloc.add(const LoadHome());
+    }
+    return const _HomeScreenView();
   }
 }
 
@@ -39,7 +42,12 @@ class _HomeScreenView extends StatelessWidget {
             icon: const Icon(Icons.notifications_outlined),
             tooltip: 'Notifications',
             onPressed: () {
-              // TODO: Navigate to notifications
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Notifications coming soon'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
             },
           ),
         ],
@@ -131,7 +139,7 @@ class _HomeContent extends StatelessWidget {
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: AppSpacing.sm),
-          _QuickActionsGrid(),
+          const _QuickActionsGrid(),
         ],
       ),
     );
@@ -221,7 +229,7 @@ class _DailyQuestionCard extends StatelessWidget {
 
     return AppCard(
       onTap: () {
-        // TODO: Wire to daily question flow
+        context.push('/ai-practice');
       },
       child: Row(
         children: [
@@ -266,6 +274,8 @@ class _DailyQuestionCard extends StatelessWidget {
 }
 
 class _QuickActionsGrid extends StatelessWidget {
+  const _QuickActionsGrid();
+
   @override
   Widget build(BuildContext context) {
     final actions = [

@@ -1,20 +1,21 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../config/constants.dart';
 import '../../../core/models/question_model.dart';
-import '../../../core/services/firestore_service.dart';
+import '../../../core/services/question_repository.dart';
 import 'exam_simulator_event.dart';
 import 'exam_simulator_state.dart';
 
 class ExamSimulatorBloc
     extends Bloc<ExamSimulatorEvent, ExamSimulatorState> {
-  final FirestoreService _firestoreService;
+  final QuestionRepository _questionRepository;
   Timer? _timer;
 
-  ExamSimulatorBloc({FirestoreService? firestoreService})
-      : _firestoreService = firestoreService ?? FirestoreService(),
+  ExamSimulatorBloc({required QuestionRepository questionRepository})
+      : _questionRepository = questionRepository,
         super(const ExamInitial()) {
     on<StartExam>(_onStartExam);
     on<AnswerQuestion>(_onAnswerQuestion);
@@ -30,9 +31,10 @@ class ExamSimulatorBloc
     emit(const ExamLoading());
 
     try {
-      final questions = <QuestionModel>[];
+      // Fetch all questions via repository (cached + offline support)
+      final allQuestions = await _questionRepository.getQuestions();
 
-      // Load questions by category with weighted distribution
+      // Sample by category with weighted distribution
       final categoryDistribution = {
         'geography': AppConstants.geographyQuestions,
         'politics': AppConstants.politicsQuestions,
@@ -40,17 +42,13 @@ class ExamSimulatorBloc
         'daily_life': AppConstants.dailyLifeQuestions,
       };
 
+      final questions = <QuestionModel>[];
       for (final entry in categoryDistribution.entries) {
-        final snapshot = await _firestoreService.getQuestions(
-          category: entry.key,
-          limit: entry.value,
-        );
-
-        final categoryQuestions = snapshot.docs
-            .map((doc) => QuestionModel.fromFirestore(doc))
-            .toList();
-
-        questions.addAll(categoryQuestions);
+        final categoryQuestions = allQuestions
+            .where((q) => q.category == entry.key)
+            .toList()
+          ..shuffle();
+        questions.addAll(categoryQuestions.take(entry.value));
       }
 
       if (questions.isEmpty) {
@@ -78,7 +76,10 @@ class ExamSimulatorBloc
         remainingSeconds: AppConstants.examDurationMinutes * 60,
       ));
     } catch (e) {
-      emit(ExamError('Failed to load exam questions: $e'));
+      if (kDebugMode) {
+        debugPrint('Failed to load exam questions: $e');
+      }
+      emit(const ExamError('Something went wrong. Please try again.'));
     }
   }
 

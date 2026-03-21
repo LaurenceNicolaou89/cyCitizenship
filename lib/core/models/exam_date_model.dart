@@ -35,7 +35,7 @@ class ExamCenter extends Equatable {
       };
 
   @override
-  List<Object?> get props => [name, district];
+  List<Object?> get props => [name, address, lat, lng, district];
 }
 
 class ExamDateModel extends Equatable {
@@ -90,5 +90,13 @@ class ExamDateModel extends Equatable {
       };
 
   @override
-  List<Object?> get props => [id, date, session];
+  List<Object?> get props => [
+        id,
+        date,
+        registrationOpen,
+        registrationClose,
+        centers,
+        year,
+        session,
+      ];
 }

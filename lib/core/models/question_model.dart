@@ -117,5 +117,17 @@ class QuestionModel extends Equatable {
       };
 
   @override
-  List<Object?> get props => [id, textEn, category, difficulty];
+  List<Object?> get props => [
+        id,
+        textEn,
+        textRu,
+        textEl,
+        options,
+        correctIndex,
+        category,
+        difficulty,
+        explanation,
+        source,
+        updatedAt,
+      ];
 }

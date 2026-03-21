@@ -17,26 +17,26 @@ class ProgressSyncService {
     });
   }
 
+  /// Retrieves a pending list from Hive by `key`, safely casting the stored
+  /// dynamic list to a typed list of maps.
+  List<Map<String, dynamic>> _getPendingList(String key) {
+    final box = Hive.box(_pendingBoxName);
+    return List<Map<String, dynamic>>.from(
+        (box.get(key) as List?)?.cast<Map<String, dynamic>>() ?? []);
+  }
+
   Future<void> queueAnswer(
       String userId, Map<String, dynamic> answer) async {
-    final box = Hive.box(_pendingBoxName);
-    final pending = List<Map<String, dynamic>>.from(
-        (box.get('pending_answers') as List?)
-                ?.cast<Map<String, dynamic>>() ??
-            []);
+    final pending = _getPendingList('pending_answers');
     pending.add({...answer, 'userId': userId});
-    await box.put('pending_answers', pending);
+    await Hive.box(_pendingBoxName).put('pending_answers', pending);
   }
 
   Future<void> queueMockExam(
       String userId, Map<String, dynamic> exam) async {
-    final box = Hive.box(_pendingBoxName);
-    final pending = List<Map<String, dynamic>>.from(
-        (box.get('pending_exams') as List?)
-                ?.cast<Map<String, dynamic>>() ??
-            []);
+    final pending = _getPendingList('pending_exams');
     pending.add({...exam, 'userId': userId});
-    await box.put('pending_exams', pending);
+    await Hive.box(_pendingBoxName).put('pending_exams', pending);
   }
 
   Future<void> syncPendingData() async {
@@ -46,10 +46,7 @@ class ProgressSyncService {
     final box = Hive.box(_pendingBoxName);
 
     // Sync pending answers
-    final pendingAnswers = List<Map<String, dynamic>>.from(
-        (box.get('pending_answers') as List?)
-                ?.cast<Map<String, dynamic>>() ??
-            []);
+    final pendingAnswers = _getPendingList('pending_answers');
 
     if (pendingAnswers.isNotEmpty) {
       final batch = _db.batch();
@@ -72,10 +69,7 @@ class ProgressSyncService {
     }
 
     // Sync pending exams
-    final pendingExams = List<Map<String, dynamic>>.from(
-        (box.get('pending_exams') as List?)
-                ?.cast<Map<String, dynamic>>() ??
-            []);
+    final pendingExams = _getPendingList('pending_exams');
 
     if (pendingExams.isNotEmpty) {
       final batch = _db.batch();

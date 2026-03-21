@@ -19,3 +19,7 @@ class SendMessage extends AiTutorEvent {
 class ClearConversation extends AiTutorEvent {
   const ClearConversation();
 }
+
+class LoadRateLimits extends AiTutorEvent {
+  const LoadRateLimits();
+}

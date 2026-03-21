@@ -15,77 +15,30 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
   bool _isFastTrack = false;
   Map<String, bool> _checked = {};
   bool _loading = true;
+  SharedPreferences? _prefs;
 
-  static const _generalItems = [
+  /// Shared documents required by both general and fast-track routes.
+  static const _sharedItems = [
     _ChecklistItem(
       key: 'passport',
       title: 'Valid passport',
       subtitle: 'Original + certified copy',
       icon: Icons.badge,
     ),
+  ];
+
+  /// Items specific to the general (7-year residency) route.
+  static const _generalOnlyItems = [
     _ChecklistItem(
       key: 'residence_general',
       title: 'Residence permit (7+ years)',
       subtitle: 'Proof of 7 consecutive years of legal residence',
       icon: Icons.home,
     ),
-    _ChecklistItem(
-      key: 'criminal_record',
-      title: 'Criminal record certificate',
-      subtitle: 'Clean criminal record from Cyprus Police',
-      icon: Icons.gavel,
-    ),
-    _ChecklistItem(
-      key: 'proof_address',
-      title: 'Proof of address',
-      subtitle: 'Recent utility bill or bank statement',
-      icon: Icons.location_on,
-    ),
-    _ChecklistItem(
-      key: 'financial',
-      title: 'Financial self-sufficiency evidence',
-      subtitle: 'Bank statements, employment contract, or tax returns',
-      icon: Icons.account_balance_wallet,
-    ),
-    _ChecklistItem(
-      key: 'greek_b1',
-      title: 'B1 Greek language certificate',
-      subtitle: 'From an accredited institution',
-      icon: Icons.translate,
-    ),
-    _ChecklistItem(
-      key: 'culture_exam',
-      title: 'Culture exam pass certificate',
-      subtitle: 'Citizenship knowledge exam result',
-      icon: Icons.school,
-    ),
-    _ChecklistItem(
-      key: 'form_m127',
-      title: 'Application form M127',
-      subtitle: 'Completed and signed',
-      icon: Icons.description,
-    ),
-    _ChecklistItem(
-      key: 'fee',
-      title: 'Application fee',
-      subtitle: '\u20ac500 + \u20ac17.08 stamps',
-      icon: Icons.payments,
-    ),
-    _ChecklistItem(
-      key: 'photos',
-      title: 'Passport photos (2)',
-      subtitle: 'Recent passport-size photographs',
-      icon: Icons.photo_camera,
-    ),
   ];
 
-  static const _fastTrackItems = [
-    _ChecklistItem(
-      key: 'passport',
-      title: 'Valid passport',
-      subtitle: 'Original + certified copy',
-      icon: Icons.badge,
-    ),
+  /// Items specific to the fast-track (3-4 year) route.
+  static const _fastTrackOnlyItems = [
     _ChecklistItem(
       key: 'residence_fast',
       title: 'Residence permit (3-4 years)',
@@ -98,6 +51,10 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
       subtitle: 'Accredited degree or professional qualification',
       icon: Icons.workspace_premium,
     ),
+  ];
+
+  /// Tail items shared by both routes (everything after route-specific docs).
+  static const _sharedTailItems = [
     _ChecklistItem(
       key: 'criminal_record',
       title: 'Criminal record certificate',
@@ -148,6 +105,18 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
     ),
   ];
 
+  static const _generalItems = [
+    ..._sharedItems,
+    ..._generalOnlyItems,
+    ..._sharedTailItems,
+  ];
+
+  static const _fastTrackItems = [
+    ..._sharedItems,
+    ..._fastTrackOnlyItems,
+    ..._sharedTailItems,
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -156,6 +125,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
 
   Future<void> _loadChecked() async {
     final prefs = await SharedPreferences.getInstance();
+    _prefs = prefs;
     final keys = prefs.getKeys().where((k) => k.startsWith('checklist_'));
     final map = <String, bool>{};
     for (final k in keys) {
@@ -168,18 +138,20 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
     });
   }
 
-  Future<void> _toggleItem(String key) async {
-    final prefs = await SharedPreferences.getInstance();
+  void _toggleItem(String key) {
+    final prefs = _prefs;
+    if (prefs == null) return;
     final newVal = !(_checked[key] ?? false);
-    await prefs.setBool('checklist_$key', newVal);
+    prefs.setBool('checklist_$key', newVal);
     setState(() {
       _checked[key] = newVal;
     });
   }
 
-  Future<void> _toggleRoute(bool fastTrack) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('checklist_fast_track', fastTrack);
+  void _toggleRoute(bool fastTrack) {
+    final prefs = _prefs;
+    if (prefs == null) return;
+    prefs.setBool('checklist_fast_track', fastTrack);
     setState(() {
       _isFastTrack = fastTrack;
     });

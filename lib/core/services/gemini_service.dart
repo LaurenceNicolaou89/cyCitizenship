@@ -1,78 +1,83 @@
-import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 
-class GeminiService {
-  late final GenerativeModel _model;
+import '../models/chat_message.dart';
+import '../utils/prompt_sanitizer.dart';
+import 'i_gemini_service.dart';
 
-  static const _tutorSystemPrompt = '''
-You are an expert tutor helping students prepare for the Cyprus citizenship exam.
-You have deep knowledge of Cyprus history, politics, geography, culture, and daily life.
-Answer questions concisely and accurately, focusing on exam-relevant information.
-If asked something outside the exam scope, politely redirect to exam topics.
-Always respond in the language the user writes in.
-''';
+class GeminiService implements IGeminiService {
+  final FirebaseFunctions _functions;
 
-  static const _smartPracticeSystemPrompt = '''
-You are a Cyprus citizenship exam question generator.
-Generate one multiple-choice question with exactly 4 options (A, B, C, D).
-Format your response as JSON:
-{"question": "...", "options": ["A. ...", "B. ...", "C. ...", "D. ..."], "correctIndex": 0, "explanation": "..."}
-Focus on the requested category and difficulty level.
-Respond in the requested language.
-''';
+  GeminiService({FirebaseFunctions? functions})
+      : _functions = functions ?? FirebaseFunctions.instance;
 
-  static const _greekPracticeSystemPrompt = '''
-You are a Greek language conversation partner for Cyprus citizenship exam candidates.
-Speak in Greek and help the user practice conversational Greek.
-Provide transliterations in parentheses after Greek text.
-Gently correct mistakes and explain grammar.
-Adapt your level: A2 (elementary) or B1 (intermediate) as requested.
-Use daily life scenarios relevant to living in Cyprus.
-''';
-
-  GeminiService({required String apiKey}) {
-    _model = GenerativeModel(
-      model: 'gemini-2.0-flash',
-      apiKey: apiKey,
-    );
+  /// Chat with the AI tutor. [history] is the conversation so far,
+  /// [message] is the new user message.
+  @override
+  Future<String> chatWithTutor(
+    List<ChatMessage> history,
+    String message,
+  ) async {
+    final sanitized = PromptSanitizer.sanitize(message);
+    final callable = _functions.httpsCallable('chatWithTutor');
+    final result = await callable.call<Map<String, dynamic>>({
+      'messages': history
+          .map((m) => {'role': m.role, 'content': m.content})
+          .toList(),
+      'message': sanitized,
+    });
+    return (result.data['response'] as String?) ??
+        'Sorry, I could not generate a response.';
   }
 
-  Future<String> chatWithTutor(List<Content> history, String message) async {
-    final chat = _model.startChat(
-      history: [
-        Content.text(_tutorSystemPrompt),
-        ...history,
-      ],
-    );
-    final response = await chat.sendMessage(Content.text(message));
-    return response.text ?? 'Sorry, I could not generate a response.';
-  }
-
+  /// Generate a practice question for the given category/difficulty/language.
+  @override
   Future<String> generatePracticeQuestion({
     required String category,
     required String difficulty,
     required String language,
   }) async {
-    final prompt =
-        'Generate a $difficulty $category question for the Cyprus citizenship exam. Respond in $language.';
-    final chat = _model.startChat(
-      history: [Content.text(_smartPracticeSystemPrompt)],
-    );
-    final response = await chat.sendMessage(Content.text(prompt));
-    return response.text ?? '{}';
+    final callable = _functions.httpsCallable('generatePracticeQuestion');
+    final result = await callable.call<Map<String, dynamic>>({
+      'category': category,
+      'difficulty': difficulty,
+      'language': language,
+    });
+    return (result.data['response'] as String?) ?? '{}';
   }
 
+  /// Greek language practice chat. [history] is the conversation so far,
+  /// [message] is the new user message, [level] is A2 or B1.
+  @override
   Future<String> greekPractice(
-    List<Content> history,
+    List<ChatMessage> history,
     String message, {
     String level = 'B1',
   }) async {
-    final chat = _model.startChat(
-      history: [
-        Content.text('$_greekPracticeSystemPrompt\nCurrent level: $level'),
-        ...history,
-      ],
-    );
-    final response = await chat.sendMessage(Content.text(message));
-    return response.text ?? 'Sorry, I could not generate a response.';
+    final sanitized = PromptSanitizer.sanitize(message);
+    final callable = _functions.httpsCallable('greekPractice');
+    final result = await callable.call<Map<String, dynamic>>({
+      'messages': history
+          .map((m) => {'role': m.role, 'content': m.content})
+          .toList(),
+      'message': sanitized,
+      'level': level,
+    });
+    return (result.data['response'] as String?) ??
+        'Sorry, I could not generate a response.';
+  }
+
+  /// Reset the tutor chat session (e.g. when starting a new conversation).
+  /// No-op for Cloud Functions backend — sessions are server-managed.
+  void resetTutorSession() {}
+
+  /// Reset the Greek practice session.
+  /// No-op for Cloud Functions backend — sessions are server-managed.
+  void resetGreekSession() {}
+
+  /// Reset all cached sessions.
+  /// No-op for Cloud Functions backend — sessions are server-managed.
+  void resetAllSessions() {
+    resetTutorSession();
+    resetGreekSession();
   }
 }

@@ -8,8 +8,14 @@ class QuestionRepository {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   static const String _boxName = 'questions';
 
+  /// In-memory cache to avoid repeated Hive deserialization (CYC-085).
+  List<QuestionModel>? _cachedQuestions;
+
+  /// No-op -- the 'questions' box is already opened in main.dart.
+  /// Kept for interface compatibility; callers may still call initialize().
   Future<void> initialize() async {
-    await Hive.openBox(_boxName);
+    // Box is opened in main.dart via Hive.openBox('questions').
+    // Using Hive.box() directly everywhere to avoid redundant opens.
   }
 
   Future<List<QuestionModel>> getQuestions({String? category}) async {
@@ -32,40 +38,45 @@ class QuestionRepository {
   }
 
   List<QuestionModel> _getLocalQuestions({String? category}) {
-    final box = Hive.box(_boxName);
-    final allQuestions = <QuestionModel>[];
+    // Populate in-memory cache on first call (CYC-085).
+    if (_cachedQuestions == null) {
+      final box = Hive.box(_boxName);
+      final deserialized = <QuestionModel>[];
 
-    for (final key in box.keys) {
-      final data = box.get(key);
-      if (data != null && data is Map) {
-        try {
-          final map = Map<String, dynamic>.from(data);
-          final question = QuestionModel(
-            id: key.toString(),
-            textEn: map['textEn'] ?? '',
-            textRu: map['textRu'] ?? '',
-            textEl: map['textEl'] ?? '',
-            options: (map['options'] as List?)
-                    ?.map((o) => QuestionOption.fromMap(
-                        Map<String, dynamic>.from(o as Map)))
-                    .toList() ??
-                [],
-            correctIndex: map['correctIndex'] ?? 0,
-            category: map['category'] ?? '',
-            difficulty: map['difficulty'] ?? 'medium',
-            explanation: Map<String, String>.from(map['explanation'] ?? {}),
-            source: map['source'] ?? '',
-          );
-
-          if (category == null || question.category == category) {
-            allQuestions.add(question);
+      for (final key in box.keys) {
+        final data = box.get(key);
+        if (data != null && data is Map) {
+          try {
+            final map = Map<String, dynamic>.from(data);
+            deserialized.add(QuestionModel(
+              id: key.toString(),
+              textEn: map['textEn'] ?? '',
+              textRu: map['textRu'] ?? '',
+              textEl: map['textEl'] ?? '',
+              options: (map['options'] as List?)
+                      ?.map((o) => QuestionOption.fromMap(
+                          Map<String, dynamic>.from(o as Map)))
+                      .toList() ??
+                  [],
+              correctIndex: map['correctIndex'] ?? 0,
+              category: map['category'] ?? '',
+              difficulty: map['difficulty'] ?? 'medium',
+              explanation:
+                  Map<String, String>.from(map['explanation'] ?? {}),
+              source: map['source'] ?? '',
+            ));
+          } catch (_) {
+            continue;
           }
-        } catch (_) {
-          continue;
         }
       }
+      _cachedQuestions = deserialized;
     }
-    return allQuestions;
+
+    if (category == null) return List.unmodifiable(_cachedQuestions!);
+    return _cachedQuestions!
+        .where((q) => q.category == category)
+        .toList();
   }
 
   Future<void> _syncFromFirestore() async {
@@ -73,10 +84,11 @@ class QuestionRepository {
       final snapshot = await _db.collection('questions').get();
       final box = Hive.box(_boxName);
 
+      // Batch all writes into a single Hive operation (CYC-086).
+      final entries = <String, Map<String, dynamic>>{};
       for (final doc in snapshot.docs) {
         final data = doc.data();
-        // Store as plain map for Hive compatibility
-        await box.put(doc.id, {
+        entries[doc.id] = {
           'textEn': data['textEn'],
           'textRu': data['textRu'],
           'textEl': data['textEl'],
@@ -90,10 +102,14 @@ class QuestionRepository {
               ? Map<String, String>.from(data['explanation'] as Map)
               : <String, String>{},
           'source': data['source'],
-        });
+        };
       }
+      await box.putAll(entries);
+
+      // Invalidate in-memory cache so next read picks up new data (CYC-085).
+      _cachedQuestions = null;
     } catch (_) {
-      // Silently fail — will use cached data
+      // Silently fail -- will use cached data
     }
   }
 
