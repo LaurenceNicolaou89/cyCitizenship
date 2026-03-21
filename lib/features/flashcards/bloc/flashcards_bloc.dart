@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive/hive.dart';
 
@@ -10,6 +12,12 @@ import 'flashcards_state.dart';
 class FlashcardsBloc extends Bloc<FlashcardsEvent, FlashcardsState> {
   final FirestoreService _firestoreService;
   static const String _boxLevelsKey = 'flashcard_box_levels';
+
+  /// Debounce timer for batching box level saves.
+  Timer? _saveDebounceTimer;
+
+  /// Pending box levels waiting to be flushed to Hive.
+  Map<String, int>? _pendingBoxLevels;
 
   FlashcardsBloc({FirestoreService? firestoreService})
       : _firestoreService = firestoreService ?? FirestoreService(),
@@ -43,6 +51,35 @@ class FlashcardsBloc extends Bloc<FlashcardsEvent, FlashcardsState> {
     } catch (_) {
       // Silently fail — non-critical.
     }
+  }
+
+  /// Schedule a debounced save of box levels (3-second delay).
+  /// Repeated calls within the window reset the timer.
+  void _debounceSaveBoxLevels(Map<String, int> levels) {
+    _pendingBoxLevels = levels;
+    _saveDebounceTimer?.cancel();
+    _saveDebounceTimer = Timer(const Duration(seconds: 3), () {
+      if (_pendingBoxLevels != null) {
+        _saveBoxLevels(_pendingBoxLevels!);
+        _pendingBoxLevels = null;
+      }
+    });
+  }
+
+  /// Flush any pending box level save immediately.
+  Future<void> _flushPendingSave() async {
+    _saveDebounceTimer?.cancel();
+    _saveDebounceTimer = null;
+    if (_pendingBoxLevels != null) {
+      await _saveBoxLevels(_pendingBoxLevels!);
+      _pendingBoxLevels = null;
+    }
+  }
+
+  @override
+  Future<void> close() async {
+    await _flushPendingSave();
+    return super.close();
   }
 
   Future<void> _onLoadFlashcards(
@@ -128,7 +165,7 @@ class FlashcardsBloc extends Bloc<FlashcardsEvent, FlashcardsState> {
     final maxBox = AppConstants.leitnerIntervals.length - 1;
     updatedLevels[questionId] = (currentLevel + 1).clamp(0, maxBox);
 
-    _saveBoxLevels(updatedLevels);
+    _debounceSaveBoxLevels(updatedLevels);
 
     final newMastered = updatedLevels.values
         .where((level) => level >= maxBox)
@@ -169,7 +206,7 @@ class FlashcardsBloc extends Bloc<FlashcardsEvent, FlashcardsState> {
     // Send back to Box 1 (level 0)
     updatedLevels[questionId] = 0;
 
-    _saveBoxLevels(updatedLevels);
+    _debounceSaveBoxLevels(updatedLevels);
 
     final maxBox = AppConstants.leitnerIntervals.length - 1;
     final newMastered = updatedLevels.values
