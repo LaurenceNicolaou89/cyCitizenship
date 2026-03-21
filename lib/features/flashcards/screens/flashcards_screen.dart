@@ -199,12 +199,13 @@ class _FlashcardsViewState extends State<_FlashcardsView> {
               final card = state.cards[index];
               final isCurrentCard = index == state.currentIndex;
               final isFlipped = isCurrentCard && state.isFlipped;
+              final locale = Localizations.localeOf(context).languageCode;
 
               return _FlashcardWidget(
-                question: card.getText('en'),
+                question: card.getText(locale),
                 answer: card.options.isNotEmpty
-                    ? card.options[card.correctIndex].getText('en')
-                    : card.getExplanation('en'),
+                    ? card.options[card.correctIndex].getText(locale)
+                    : card.getExplanation(locale),
                 category: card.category,
                 boxLevel: state.boxLevels[card.id] ?? 0,
                 isFlipped: isFlipped,

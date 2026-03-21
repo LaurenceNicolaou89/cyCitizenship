@@ -13,35 +13,22 @@ import '../bloc/ai_tutor_bloc.dart';
 import '../bloc/ai_tutor_event.dart';
 import '../bloc/ai_tutor_state.dart';
 
-class AiTutorScreen extends StatelessWidget {
+class AiTutorScreen extends StatefulWidget {
   const AiTutorScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => AiTutorBloc(
-        geminiService: context.read<GeminiService>(),
-        rateLimitService: context.read<AiRateLimitService>(),
-      )..add(const LoadRateLimits()),
-      child: const _AiTutorView(),
-    );
-  }
+  State<AiTutorScreen> createState() => _AiTutorScreenState();
 }
 
-class _AiTutorView extends StatefulWidget {
-  const _AiTutorView();
-
-  @override
-  State<_AiTutorView> createState() => _AiTutorViewState();
-}
-
-class _AiTutorViewState extends State<_AiTutorView> {
+class _AiTutorScreenState extends State<AiTutorScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
   final _focusNode = FocusNode();
+  Timer? _scrollTimer;
 
   @override
   void dispose() {
+    _scrollTimer?.cancel();
     _controller.dispose();
     _scrollController.dispose();
     _focusNode.dispose();
@@ -50,12 +37,16 @@ class _AiTutorViewState extends State<_AiTutorView> {
 
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
-      Timer(const Duration(milliseconds: 100), () {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
+      _scrollTimer?.cancel();
+      _scrollTimer = Timer(const Duration(milliseconds: 100), () {
+        if (!mounted) return;
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
       });
     }
   }

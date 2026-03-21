@@ -45,9 +45,11 @@ class _GreekPracticeViewState extends State<_GreekPracticeView> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
   final _focusNode = FocusNode();
+  Timer? _scrollTimer;
 
   @override
   void dispose() {
+    _scrollTimer?.cancel();
     _controller.dispose();
     _scrollController.dispose();
     _focusNode.dispose();
@@ -56,7 +58,9 @@ class _GreekPracticeViewState extends State<_GreekPracticeView> {
 
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
-      Timer(const Duration(milliseconds: 100), () {
+      _scrollTimer?.cancel();
+      _scrollTimer = Timer(const Duration(milliseconds: 100), () {
+        if (!mounted) return;
         if (_scrollController.hasClients) {
           _scrollController.animateTo(
             _scrollController.position.maxScrollExtent,

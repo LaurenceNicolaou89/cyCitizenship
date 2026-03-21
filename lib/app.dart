@@ -18,7 +18,7 @@ import 'features/auth/bloc/auth_event.dart';
 import 'features/home/bloc/home_bloc.dart';
 import 'features/home/bloc/home_event.dart';
 
-class CyCitizenshipApp extends StatelessWidget {
+class CyCitizenshipApp extends StatefulWidget {
   const CyCitizenshipApp({
     super.key,
     required this.onboardingComplete,
@@ -27,6 +27,31 @@ class CyCitizenshipApp extends StatelessWidget {
 
   final bool onboardingComplete;
   final SharedPreferences prefs;
+
+  @override
+  State<CyCitizenshipApp> createState() => _CyCitizenshipAppState();
+}
+
+class _CyCitizenshipAppState extends State<CyCitizenshipApp> {
+  late final ProgressSyncService _progressSyncService;
+  late final NotificationService _notificationService;
+  late final BillingService _billingService;
+
+  @override
+  void initState() {
+    super.initState();
+    _progressSyncService = ProgressSyncService()..initialize();
+    _notificationService = NotificationService()..initialize();
+    _billingService = BillingService()..initialize();
+  }
+
+  @override
+  void dispose() {
+    _progressSyncService.dispose();
+    _notificationService.dispose();
+    _billingService.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,15 +63,9 @@ class CyCitizenshipApp extends StatelessWidget {
         RepositoryProvider(
           create: (_) => QuestionRepository()..initialize(),
         ),
-        RepositoryProvider(
-          create: (_) => ProgressSyncService()..initialize(),
-        ),
-        RepositoryProvider(
-          create: (_) => NotificationService()..initialize(),
-        ),
-        RepositoryProvider(
-          create: (_) => BillingService()..initialize(),
-        ),
+        RepositoryProvider.value(value: _progressSyncService),
+        RepositoryProvider.value(value: _notificationService),
+        RepositoryProvider.value(value: _billingService),
         RepositoryProvider(create: (_) => AnalyticsService()),
         RepositoryProvider(create: (_) => AiRateLimitService(prefs)),
       ],
@@ -68,7 +87,8 @@ class CyCitizenshipApp extends StatelessWidget {
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
           themeMode: ThemeMode.system,
-          routerConfig: createRouter(onboardingComplete: onboardingComplete),
+          routerConfig:
+              createRouter(onboardingComplete: widget.onboardingComplete),
         ),
       ),
     );
