@@ -5,6 +5,24 @@ export '../../../core/models/chat_message.dart';
 
 import '../../../core/models/chat_message.dart';
 
+class AiTutorChatMessage extends Equatable {
+  final String role;
+  final String content;
+  final DateTime timestamp;
+
+  const AiTutorChatMessage({
+    required this.role,
+    required this.content,
+    required this.timestamp,
+  });
+
+  bool get isUser => role == 'user';
+  bool get isAssistant => role == 'assistant';
+
+  @override
+  List<Object?> get props => [role, content, timestamp];
+}
+
 sealed class AiTutorState extends Equatable {
   const AiTutorState();
 
@@ -17,7 +35,7 @@ class AiTutorInitial extends AiTutorState {
 }
 
 class AiTutorLoading extends AiTutorState {
-  final List<ChatMessage> messages;
+  final List<AiTutorChatMessage> messages;
 
   const AiTutorLoading({required this.messages});
 
@@ -26,7 +44,7 @@ class AiTutorLoading extends AiTutorState {
 }
 
 class AiTutorLoaded extends AiTutorState {
-  final List<ChatMessage> messages;
+  final List<AiTutorChatMessage> messages;
   final int messagesUsedToday;
   final int dailyLimit;
 
@@ -44,7 +62,7 @@ class AiTutorLoaded extends AiTutorState {
 
 class AiTutorError extends AiTutorState {
   final String message;
-  final List<ChatMessage> previousMessages;
+  final List<AiTutorChatMessage> previousMessages;
 
   const AiTutorError({
     required this.message,

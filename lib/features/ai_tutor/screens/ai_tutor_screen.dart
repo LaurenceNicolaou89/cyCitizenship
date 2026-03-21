@@ -135,7 +135,7 @@ class _AiTutorViewState extends State<_AiTutorView> {
                   AiTutorLoaded(:final messages) => messages,
                   AiTutorLoading(:final messages) => messages,
                   AiTutorError(:final previousMessages) => previousMessages,
-                  _ => <ChatMessage>[],
+                  _ => <AiTutorChatMessage>[],
                 };
                 final isLoading = state is AiTutorLoading;
 
@@ -362,7 +362,7 @@ class _AiTutorViewState extends State<_AiTutorView> {
 }
 
 class _MessageBubble extends StatelessWidget {
-  final ChatMessage message;
+  final AiTutorChatMessage message;
 
   const _MessageBubble({required this.message});
 
