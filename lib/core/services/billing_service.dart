@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 
+import 'i_billing_service.dart';
+
 /// Result of a purchase verification attempt.
 enum VerificationResult {
   success,
@@ -10,7 +12,7 @@ enum VerificationResult {
   failed,
 }
 
-class BillingService {
+class BillingService implements IBillingService {
   final InAppPurchase _iap = InAppPurchase.instance;
   final FirebaseFunctions _functions = FirebaseFunctions.instance;
   StreamSubscription<List<PurchaseDetails>>? _subscription;
@@ -21,10 +23,13 @@ class BillingService {
   bool _initialized = false;
   List<ProductDetails> _products = [];
 
+  @override
   bool get isAvailable => _available;
+  @override
   List<ProductDetails> get products => _products;
 
   final _purchaseController = StreamController<PurchaseStatus>.broadcast();
+  @override
   Stream<PurchaseStatus> get purchaseStream => _purchaseController.stream;
 
   /// Human-readable error message from the last failed verification.
@@ -38,6 +43,7 @@ class BillingService {
     await initialize();
   }
 
+  @override
   Future<void> initialize() async {
     if (_initialized) return;
     _initialized = true;
@@ -129,6 +135,7 @@ class BillingService {
     }
   }
 
+  @override
   Future<void> buyPremium() async {
     if (_products.isEmpty) return;
 
@@ -146,10 +153,12 @@ class BillingService {
     await _iap.buyNonConsumable(purchaseParam: purchaseParam);
   }
 
+  @override
   Future<void> restorePurchases() async {
     await _iap.restorePurchases();
   }
 
+  @override
   void dispose() {
     _subscription?.cancel();
     _purchaseController.close();

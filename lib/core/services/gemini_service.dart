@@ -11,8 +11,9 @@ class ChatMessage {
 }
 
 import '../utils/prompt_sanitizer.dart';
+import 'i_gemini_service.dart';
 
-class GeminiService {
+class GeminiService implements IGeminiService {
   final FirebaseFunctions _functions;
 
   GeminiService({FirebaseFunctions? functions})
@@ -20,6 +21,7 @@ class GeminiService {
 
   /// Chat with the AI tutor. [history] is the conversation so far,
   /// [message] is the new user message.
+  @override
   Future<String> chatWithTutor(
     List<ChatMessage> history,
     String message,
@@ -35,6 +37,7 @@ class GeminiService {
   }
 
   /// Generate a practice question for the given category/difficulty/language.
+  @override
   Future<String> generatePracticeQuestion({
     required String category,
     required String difficulty,
@@ -51,6 +54,7 @@ class GeminiService {
 
   /// Greek language practice chat. [history] is the conversation so far,
   /// [message] is the new user message, [level] is A2 or B1.
+  @override
   Future<String> greekPractice(
     List<ChatMessage> history,
     String message, {
