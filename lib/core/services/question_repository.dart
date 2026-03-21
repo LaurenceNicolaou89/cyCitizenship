@@ -8,8 +8,11 @@ class QuestionRepository {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   static const String _boxName = 'questions';
 
+  /// No-op -- the 'questions' box is already opened in main.dart.
+  /// Kept for interface compatibility; callers may still call initialize().
   Future<void> initialize() async {
-    await Hive.openBox(_boxName);
+    // Box is opened in main.dart via Hive.openBox('questions').
+    // Using Hive.box() directly everywhere to avoid redundant opens.
   }
 
   Future<List<QuestionModel>> getQuestions({String? category}) async {
@@ -93,7 +96,7 @@ class QuestionRepository {
         });
       }
     } catch (_) {
-      // Silently fail — will use cached data
+      // Silently fail -- will use cached data
     }
   }
 

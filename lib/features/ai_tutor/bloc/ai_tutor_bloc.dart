@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
+import '../../../config/constants.dart';
 import '../../../core/services/gemini_service.dart';
 import 'ai_tutor_event.dart';
 import 'ai_tutor_state.dart';
@@ -13,7 +14,9 @@ class AiTutorBloc extends Bloc<AiTutorEvent, AiTutorState> {
   int _messagesUsedToday = 0;
   DateTime _lastResetDate = DateTime.now();
 
-  int get dailyLimit => isPremium ? 50 : 3;
+  int get dailyLimit => isPremium
+      ? AppConstants.paidAiMessagesPerDay
+      : AppConstants.freeAiMessagesPerDay;
 
   AiTutorBloc({
     required GeminiService geminiService,
