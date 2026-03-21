@@ -1,44 +1,56 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
+import '../../../config/constants.dart';
+import '../../../core/services/ai_rate_limit_service.dart';
 import '../../../core/services/gemini_service.dart';
 import 'ai_tutor_event.dart';
 import 'ai_tutor_state.dart';
 
 class AiTutorBloc extends Bloc<AiTutorEvent, AiTutorState> {
+  static const _feature = 'ai_tutor';
+
   final GeminiService _geminiService;
+  final AiRateLimitService _rateLimitService;
   final bool isPremium;
 
   List<ChatMessage> _messages = [];
   int _messagesUsedToday = 0;
-  DateTime _lastResetDate = DateTime.now();
 
-  int get dailyLimit => isPremium ? 50 : 3;
+  int get dailyLimit => isPremium
+      ? AppConstants.paidAiMessagesPerDay
+      : AppConstants.freeAiMessagesPerDay;
 
   AiTutorBloc({
     required GeminiService geminiService,
+    required AiRateLimitService rateLimitService,
     this.isPremium = false,
   })  : _geminiService = geminiService,
+        _rateLimitService = rateLimitService,
         super(const AiTutorInitial()) {
+    on<LoadRateLimits>(_onLoadRateLimits);
     on<SendMessage>(_onSendMessage);
     on<ClearConversation>(_onClearConversation);
   }
 
-  void _checkDayReset() {
-    final now = DateTime.now();
-    if (now.day != _lastResetDate.day ||
-        now.month != _lastResetDate.month ||
-        now.year != _lastResetDate.year) {
-      _messagesUsedToday = 0;
-      _lastResetDate = now;
-    }
+  void _onLoadRateLimits(
+    LoadRateLimits event,
+    Emitter<AiTutorState> emit,
+  ) {
+    _messagesUsedToday = _rateLimitService.getUsageCount(_feature);
+    emit(AiTutorLoaded(
+      messages: List.unmodifiable(_messages),
+      messagesUsedToday: _messagesUsedToday,
+      dailyLimit: dailyLimit,
+    ));
   }
 
   Future<void> _onSendMessage(
     SendMessage event,
     Emitter<AiTutorState> emit,
   ) async {
-    _checkDayReset();
+    // Reload persisted count (handles midnight reset)
+    _messagesUsedToday = _rateLimitService.getUsageCount(_feature);
 
     if (_messagesUsedToday >= dailyLimit) {
       emit(AiTutorLoaded(
@@ -81,7 +93,9 @@ class AiTutorBloc extends Bloc<AiTutorEvent, AiTutorState> {
         timestamp: DateTime.now(),
       );
       _messages = [..._messages, assistantMessage];
-      _messagesUsedToday++;
+
+      // Persist the incremented count
+      _messagesUsedToday = _rateLimitService.incrementUsage(_feature);
 
       emit(AiTutorLoaded(
         messages: List.unmodifiable(_messages),
