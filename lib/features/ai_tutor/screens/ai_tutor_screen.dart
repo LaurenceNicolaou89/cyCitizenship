@@ -4,33 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../config/theme.dart';
-import '../../../core/services/gemini_service.dart';
 import '../bloc/ai_tutor_bloc.dart';
 import '../bloc/ai_tutor_event.dart';
 import '../bloc/ai_tutor_state.dart';
 
-class AiTutorScreen extends StatelessWidget {
+class AiTutorScreen extends StatefulWidget {
   const AiTutorScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => AiTutorBloc(
-        geminiService: context.read<GeminiService>(),
-      ),
-      child: const _AiTutorView(),
-    );
-  }
+  State<AiTutorScreen> createState() => _AiTutorScreenState();
 }
 
-class _AiTutorView extends StatefulWidget {
-  const _AiTutorView();
-
-  @override
-  State<_AiTutorView> createState() => _AiTutorViewState();
-}
-
-class _AiTutorViewState extends State<_AiTutorView> {
+class _AiTutorScreenState extends State<AiTutorScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
   final _focusNode = FocusNode();

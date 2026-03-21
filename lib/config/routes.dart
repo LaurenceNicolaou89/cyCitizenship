@@ -3,6 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/services/gemini_service.dart';
+import '../features/home/bloc/home_bloc.dart';
+import '../features/home/bloc/home_event.dart';
+import '../features/ai_tutor/bloc/ai_tutor_bloc.dart';
 import '../features/home/screens/home_screen.dart';
 import '../features/exam_simulator/screens/exam_simulator_screen.dart';
 import '../features/exam_simulator/screens/exam_results_screen.dart';
@@ -62,7 +65,19 @@ GoRouter createRouter({required bool onboardingComplete}) => GoRouter(
     // Main app with bottom nav shell
     ShellRoute(
       navigatorKey: _shellNavigatorKey,
-      builder: (context, state, child) => AppShell(child: child),
+      builder: (context, state, child) => MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (_) => HomeBloc()..add(const LoadHome()),
+          ),
+          BlocProvider(
+            create: (context) => AiTutorBloc(
+              geminiService: context.read<GeminiService>(),
+            ),
+          ),
+        ],
+        child: AppShell(child: child),
+      ),
       routes: [
         GoRoute(
           path: '/home',
