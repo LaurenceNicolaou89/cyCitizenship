@@ -15,6 +15,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
   bool _isFastTrack = false;
   Map<String, bool> _checked = {};
   bool _loading = true;
+  SharedPreferences? _prefs;
 
   static const _generalItems = [
     _ChecklistItem(
@@ -156,6 +157,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
 
   Future<void> _loadChecked() async {
     final prefs = await SharedPreferences.getInstance();
+    _prefs = prefs;
     final keys = prefs.getKeys().where((k) => k.startsWith('checklist_'));
     final map = <String, bool>{};
     for (final k in keys) {
@@ -168,18 +170,20 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
     });
   }
 
-  Future<void> _toggleItem(String key) async {
-    final prefs = await SharedPreferences.getInstance();
+  void _toggleItem(String key) {
+    final prefs = _prefs;
+    if (prefs == null) return;
     final newVal = !(_checked[key] ?? false);
-    await prefs.setBool('checklist_$key', newVal);
+    prefs.setBool('checklist_$key', newVal);
     setState(() {
       _checked[key] = newVal;
     });
   }
 
-  Future<void> _toggleRoute(bool fastTrack) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('checklist_fast_track', fastTrack);
+  void _toggleRoute(bool fastTrack) {
+    final prefs = _prefs;
+    if (prefs == null) return;
+    prefs.setBool('checklist_fast_track', fastTrack);
     setState(() {
       _isFastTrack = fastTrack;
     });

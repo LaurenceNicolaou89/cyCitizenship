@@ -24,16 +24,18 @@ class ExamResultsScreen extends StatelessWidget {
           if (state is ExamCompleted) {
             return ExamResultsView(state: state);
           }
-          return _NoResultsFallback();
+          return const _NoResultsFallback();
         },
       );
     } catch (_) {
-      return _NoResultsFallback();
+      return const _NoResultsFallback();
     }
   }
 }
 
 class _NoResultsFallback extends StatelessWidget {
+  const _NoResultsFallback();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
