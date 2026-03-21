@@ -18,6 +18,7 @@ class BillingService {
   static const String premiumProductId = 'cy_citizenship_premium';
 
   bool _available = false;
+  bool _initialized = false;
   List<ProductDetails> _products = [];
 
   bool get isAvailable => _available;
@@ -30,7 +31,16 @@ class BillingService {
   String? _lastVerificationError;
   String? get lastVerificationError => _lastVerificationError;
 
+  /// Ensures the service is initialized before use.
+  /// Safe to call multiple times — only runs once.
+  Future<void> ensureInitialized() async {
+    if (_initialized) return;
+    await initialize();
+  }
+
   Future<void> initialize() async {
+    if (_initialized) return;
+    _initialized = true;
     _available = await _iap.isAvailable();
     if (!_available) return;
 

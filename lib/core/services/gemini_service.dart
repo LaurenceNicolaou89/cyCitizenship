@@ -66,4 +66,19 @@ class GeminiService {
     return (result.data['response'] as String?) ??
         'Sorry, I could not generate a response.';
   }
+
+  /// Reset the tutor chat session (e.g. when starting a new conversation).
+  /// No-op for Cloud Functions backend — sessions are server-managed.
+  void resetTutorSession() {}
+
+  /// Reset the Greek practice session.
+  /// No-op for Cloud Functions backend — sessions are server-managed.
+  void resetGreekSession() {}
+
+  /// Reset all cached sessions.
+  /// No-op for Cloud Functions backend — sessions are server-managed.
+  void resetAllSessions() {
+    resetTutorSession();
+    resetGreekSession();
+  }
 }

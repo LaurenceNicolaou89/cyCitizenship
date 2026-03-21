@@ -13,6 +13,12 @@ class AiTutorBloc extends Bloc<AiTutorEvent, AiTutorState> {
   final AiRateLimitService _rateLimitService;
   final bool isPremium;
 
+  /// Maximum messages retained in the UI list.
+  static const int _maxMessages = 100;
+
+  /// Sliding window size sent to the backend to limit token usage.
+  static const int _geminiWindowSize = 50;
+
   List<AiTutorChatMessage> _messages = [];
   int _messagesUsedToday = 0;
 
@@ -70,17 +76,22 @@ class AiTutorBloc extends Bloc<AiTutorEvent, AiTutorState> {
     emit(AiTutorLoading(messages: List.unmodifiable(_messages)));
 
     try {
-      // Build history from all messages except the last user message
-      final history = _messages.length > 1
-          ? _messages
-              .sublist(0, _messages.length - 1)
-              .where((m) => m.role == 'user' || m.role == 'assistant')
-              .map((m) => ChatMessage(
-                    role: m.role == 'user' ? 'user' : 'model',
-                    content: m.content,
-                  ))
-              .toList()
-          : <ChatMessage>[];
+      // Build history using a sliding window to limit token usage.
+      // Exclude the last user message (sent separately by chatWithTutor).
+      final allExceptLast = _messages.length > 1
+          ? _messages.sublist(0, _messages.length - 1)
+          : <AiTutorChatMessage>[];
+      final windowStart = allExceptLast.length > _geminiWindowSize
+          ? allExceptLast.length - _geminiWindowSize
+          : 0;
+      final history = allExceptLast
+          .sublist(windowStart)
+          .where((m) => m.role == 'user' || m.role == 'assistant')
+          .map((m) => ChatMessage(
+                role: m.role == 'user' ? 'user' : 'model',
+                content: m.content,
+              ))
+          .toList();
 
       final response = await _geminiService.chatWithTutor(
         history,
@@ -93,6 +104,7 @@ class AiTutorBloc extends Bloc<AiTutorEvent, AiTutorState> {
         timestamp: DateTime.now(),
       );
       _messages = [..._messages, assistantMessage];
+      _trimMessages();
 
       // Persist the incremented count
       _messagesUsedToday = _rateLimitService.incrementUsage(_feature);
@@ -112,11 +124,19 @@ class AiTutorBloc extends Bloc<AiTutorEvent, AiTutorState> {
     }
   }
 
+  /// Trims the message list to [_maxMessages], dropping the oldest entries.
+  void _trimMessages() {
+    if (_messages.length > _maxMessages) {
+      _messages = _messages.sublist(_messages.length - _maxMessages);
+    }
+  }
+
   Future<void> _onClearConversation(
     ClearConversation event,
     Emitter<AiTutorState> emit,
   ) async {
     _messages = [];
+    _geminiService.resetTutorSession();
     emit(AiTutorLoaded(
       messages: const [],
       messagesUsedToday: _messagesUsedToday,
