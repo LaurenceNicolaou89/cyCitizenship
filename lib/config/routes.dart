@@ -112,9 +112,7 @@ GoRouter createRouter({required bool onboardingComplete}) => GoRouter(
     ),
     GoRoute(
       path: '/ai-practice',
-      builder: (context, state) => AiPracticeScreen(
-        geminiService: context.read<GeminiService>(),
-      ),
+      builder: (context, state) => const AiPracticeScreen(),
     ),
     GoRoute(
       path: '/greek-practice',
