@@ -34,9 +34,11 @@ class _AiTutorViewState extends State<_AiTutorView> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
   final _focusNode = FocusNode();
+  Timer? _scrollTimer;
 
   @override
   void dispose() {
+    _scrollTimer?.cancel();
     _controller.dispose();
     _scrollController.dispose();
     _focusNode.dispose();
@@ -45,12 +47,16 @@ class _AiTutorViewState extends State<_AiTutorView> {
 
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
-      Timer(const Duration(milliseconds: 100), () {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
+      _scrollTimer?.cancel();
+      _scrollTimer = Timer(const Duration(milliseconds: 100), () {
+        if (!mounted) return;
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
       });
     }
   }
