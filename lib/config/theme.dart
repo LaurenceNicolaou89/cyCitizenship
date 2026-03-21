@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AppColors {
   // Primary
@@ -49,7 +48,7 @@ class AppSpacing {
 
 class AppTheme {
   static ThemeData get light {
-    final textTheme = GoogleFonts.interTextTheme();
+    const textTheme = TextTheme();
 
     return ThemeData(
       useMaterial3: true,
@@ -161,9 +160,7 @@ class AppTheme {
   }
 
   static ThemeData get dark {
-    final textTheme = GoogleFonts.interTextTheme(
-      ThemeData.dark().textTheme,
-    );
+    final textTheme = ThemeData.dark().textTheme;
 
     return ThemeData(
       useMaterial3: true,
