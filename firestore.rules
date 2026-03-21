@@ -28,8 +28,79 @@ service cloud.firestore {
     }
 
     // User Progress: users can only access own progress
-    match /user_progress/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    // Schema-validated per subcollection to prevent arbitrary data writes
+    match /user_progress/{userId} {
+      // Allow reading the parent document
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // Answers subcollection — validate schema
+      match /answers/{answerId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow create: if request.auth != null && request.auth.uid == userId
+          && request.resource.data.keys().hasOnly(['questionId', 'correct', 'answeredAt', 'category'])
+          && request.resource.data.keys().hasAll(['questionId', 'correct', 'answeredAt', 'category'])
+          && request.resource.data.questionId is string
+          && request.resource.data.correct is bool
+          && request.resource.data.answeredAt is timestamp
+          && request.resource.data.category is string
+          && request.resource.data.questionId.size() <= 100
+          && request.resource.data.category.size() <= 50;
+        allow update: if request.auth != null && request.auth.uid == userId
+          && request.resource.data.keys().hasOnly(['questionId', 'correct', 'answeredAt', 'category'])
+          && request.resource.data.keys().hasAll(['questionId', 'correct', 'answeredAt', 'category'])
+          && request.resource.data.questionId is string
+          && request.resource.data.correct is bool
+          && request.resource.data.answeredAt is timestamp
+          && request.resource.data.category is string
+          && request.resource.data.questionId.size() <= 100
+          && request.resource.data.category.size() <= 50;
+        allow delete: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // Mock exams subcollection — validate schema
+      match /mock_exams/{examId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow create: if request.auth != null && request.auth.uid == userId
+          && request.resource.data.keys().hasOnly(['score', 'totalQuestions', 'duration', 'completedAt', 'answers'])
+          && request.resource.data.keys().hasAll(['score', 'totalQuestions', 'completedAt'])
+          && request.resource.data.score is int
+          && request.resource.data.totalQuestions is int
+          && request.resource.data.completedAt is timestamp
+          && request.resource.data.score >= 0
+          && request.resource.data.score <= 200
+          && request.resource.data.totalQuestions >= 1
+          && request.resource.data.totalQuestions <= 200
+          && (!request.resource.data.keys().hasAny(['duration']) || request.resource.data.duration is int)
+          && (!request.resource.data.keys().hasAny(['answers']) || request.resource.data.answers is list)
+          && (!request.resource.data.keys().hasAny(['answers']) || request.resource.data.answers.size() <= 200);
+        allow update: if request.auth != null && request.auth.uid == userId
+          && request.resource.data.keys().hasOnly(['score', 'totalQuestions', 'duration', 'completedAt', 'answers'])
+          && request.resource.data.keys().hasAll(['score', 'totalQuestions', 'completedAt'])
+          && request.resource.data.score is int
+          && request.resource.data.totalQuestions is int
+          && request.resource.data.completedAt is timestamp
+          && request.resource.data.score >= 0
+          && request.resource.data.score <= 200
+          && request.resource.data.totalQuestions >= 1
+          && request.resource.data.totalQuestions <= 200
+          && (!request.resource.data.keys().hasAny(['duration']) || request.resource.data.duration is int)
+          && (!request.resource.data.keys().hasAny(['answers']) || request.resource.data.answers is list)
+          && (!request.resource.data.keys().hasAny(['answers']) || request.resource.data.answers.size() <= 200);
+        allow delete: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // Category stats subcollection — validate schema
+      match /category_stats/{category} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if request.auth != null && request.auth.uid == userId
+          && request.resource.data.keys().hasOnly(['totalAnswered', 'totalCorrect', 'lastUpdated'])
+          && request.resource.data.keys().hasAll(['totalAnswered', 'totalCorrect', 'lastUpdated'])
+          && request.resource.data.totalAnswered is int
+          && request.resource.data.totalCorrect is int
+          && request.resource.data.lastUpdated is timestamp
+          && request.resource.data.totalAnswered >= 0
+          && request.resource.data.totalCorrect >= 0;
+      }
     }
 
     // Exam Dates: read-only for authenticated users
