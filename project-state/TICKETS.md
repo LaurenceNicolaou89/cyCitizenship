@@ -242,14 +242,156 @@
 
 ---
 
+---
+
+## Epic 16: Critical Security Fixes
+| ID | Title | Agent | Status | Priority |
+|----|-------|-------|--------|----------|
+| CYC-062 | AI prompt injection sanitization — sanitize user input before Gemini calls | Security Dev | pending | P0 |
+| CYC-063 | Purchase receipt verification Cloud Function — validate receipts server-side | Backend Dev | pending | P0 |
+| CYC-066 | Fix Firestore rules operator precedence bug in create rule | Security Dev | pending | P0 |
+
+### Acceptance Criteria
+- **CYC-062**: User input sanitized before sending to Gemini (strip injection patterns, enforce max length). Consider Cloud Function proxy.
+- **CYC-063**: Cloud Function receives purchase token, validates with Google Play / App Store APIs, sets `isPremium` only on verified receipt. Idempotent.
+- **CYC-066**: Firestore create rule uses explicit parentheses so `auth.uid == userId` is always enforced. Tested with security rules unit tests.
+
+---
+
+## Epic 17: High-Priority Security & Architecture Fixes
+| ID | Title | Agent | Status | Priority |
+|----|-------|-------|--------|----------|
+| CYC-064 | Extract AiPracticeBloc from AiPracticeScreen (setState → BLoC) | Frontend Dev | pending | P0 |
+| CYC-065 | Extract GreekPracticeBloc from GreekPracticeScreen (setState → BLoC) | Frontend Dev | pending | P0 |
+| CYC-067 | Persist AI rate limits + enforce server-side | Backend Dev | pending | P0 |
+| CYC-068 | Move Gemini calls behind Cloud Function (protect API key) | Backend Dev | pending | P0 |
+| CYC-069 | Add auth/paywall route guards for premium features | Security Dev | pending | P0 |
+| CYC-070 | Add Firestore schema validation on user_progress subcollections | DBA | pending | P0 |
+| CYC-071 | Fix service disposal — convert app root or add dispose lifecycle | Backend Dev | pending | P1 |
+| CYC-072 | Extract shared chat UI widgets (MessageBubble, TypingIndicator, ChatInput) | Frontend Dev | pending | P1 |
+| CYC-073 | Extract shared CategoryUtils (name/color mapping) | Frontend Dev | pending | P1 |
+| CYC-074 | Fix QuestionModel Equatable props — include all fields | Backend Dev | pending | P1 |
+| CYC-075 | Fix UserModel Equatable props — include all mutable fields | Backend Dev | pending | P1 |
+| CYC-076 | Add error logging to all silent catch blocks | Backend Dev | pending | P1 |
+| CYC-077 | Scope ExamSimulatorScreen BlocBuilder — timer-only rebuild via BlocSelector | Frontend Dev | pending | P1 |
+
+### Acceptance Criteria
+- **CYC-064**: AiPracticeScreen uses AiPracticeBloc with proper events/states. No setState for business logic. Testable.
+- **CYC-065**: GreekPracticeScreen uses GreekPracticeBloc. Reuses existing ChatMessage model from ai_tutor_state.dart.
+- **CYC-067**: Daily AI limit persisted in Hive/SharedPreferences. Cloud Function proxy enforces server-side limits. Uses AppConstants for limit values.
+- **CYC-068**: Gemini API key lives only in Cloud Function environment. Client calls Cloud Function with auth token. Key not in APK/IPA.
+- **CYC-069**: Premium routes (/ai-practice, /greek-practice, /flashcards full) check isPremium. Guest users redirected to auth for protected features.
+- **CYC-070**: Firestore rules validate field names, types, and sizes on answers/mock_exams subcollections. Tested with rules unit tests.
+- **CYC-071**: Services with active subscriptions have dispose() called on app teardown. Convert CyCitizenshipApp to StatefulWidget or use teardown wrapper.
+- **CYC-072**: Shared ChatMessageBubble, TypingIndicator, ChatInputField in lib/shared/widgets/. Both AI screens use them.
+- **CYC-073**: CategoryUtils in lib/core/utils/ with getCategoryColor() and getCategoryDisplayName(). All 4+ locations use it.
+- **CYC-074**: QuestionModel.props includes all fields (id, textEn, textRu, textEl, category, difficulty, options, correctIndex, explanation, source, updatedAt).
+- **CYC-075**: UserModel.props includes all mutable fields (displayName, language, badges, examTarget, checklist, lastStudyDate, etc.).
+- **CYC-076**: All catch blocks log errors via debugPrint at minimum. No silent swallowing. Consider Crashlytics for production.
+- **CYC-077**: Timer chip uses BlocSelector scoped to remainingSeconds. Question/answer UI only rebuilds on question/answer changes.
+
+---
+
+## Epic 18: Medium Security Fixes
+| ID | Title | Agent | Status | Priority |
+|----|-------|-------|--------|----------|
+| CYC-080 | Validate push notification route data against whitelist | Security Dev | pending | P1 |
+| CYC-081 | Remove google-services.json from git + enable App Check | Security Dev | pending | P1 |
+| CYC-082 | Add input validation layer for Firestore writes | Backend Dev | pending | P1 |
+| CYC-083 | Exclude isPremium/purchaseDate from toFirestore() | Backend Dev | pending | P1 |
+
+### Acceptance Criteria
+- **CYC-080**: NotificationService validates route against known app routes before navigating. Unknown routes ignored.
+- **CYC-081**: google-services.json and GoogleService-Info.plist in .gitignore. Removed from git history. App Check enabled. Firebase keys restricted in Google Cloud Console.
+- **CYC-082**: FirestoreService validates expected field names/types before writes. Rejects unexpected fields.
+- **CYC-083**: UserModel has separate toCreateMap()/toUpdateMap() that exclude server-managed fields. Or toFirestore() omits isPremium/purchaseDate.
+
+---
+
+## Epic 19: Performance & Optimization
+| ID | Title | Agent | Status | Priority |
+|----|-------|-------|--------|----------|
+| CYC-084 | Use QuestionRepository in ExamSimulator + Flashcards BLoCs (batch queries) | Backend Dev | pending | P1 |
+| CYC-085 | Add in-memory cache to QuestionRepository | Backend Dev | pending | P1 |
+| CYC-086 | Batch Hive writes in QuestionRepository sync (putAll) | Backend Dev | pending | P1 |
+| CYC-087 | Debounce flashcard box level saves | Backend Dev | pending | P2 |
+| CYC-088 | Move HomeBloc to ShellRoute level (persist across tab switches) | Frontend Dev | pending | P1 |
+| CYC-089 | Move AiTutorBloc to ShellRoute level (preserve conversation) | Frontend Dev | pending | P1 |
+| CYC-090 | Lazy-init services in app.dart (remove eager ..initialize()) | Backend Dev | pending | P2 |
+
+### Acceptance Criteria
+- **CYC-084**: Both BLoCs use QuestionRepository.getQuestions(). Exam start = 1 cached read + client-side sampling. Flashcards same.
+- **CYC-085**: QuestionRepository caches List<QuestionModel> in memory. Invalidated only on sync. Subsequent calls return cache.
+- **CYC-086**: _syncFromFirestore uses box.putAll() for bulk inserts instead of sequential box.put().
+- **CYC-087**: _saveBoxLevels debounced (5s inactivity or on bloc close). Not fired on every swipe.
+- **CYC-088**: HomeBloc created at ShellRoute level. No loading spinner on tab switch. Pull-to-refresh triggers reload.
+- **CYC-089**: AiTutorBloc at ShellRoute level. Conversation persists during session. Daily limit counter preserved.
+- **CYC-090**: Services use lazy initialization. ..initialize() moved to first-use or triggered by specific screens.
+
+---
+
+## Epic 20: Memory Leak Fixes
+| ID | Title | Agent | Status | Priority |
+|----|-------|-------|--------|----------|
+| CYC-078 | Fix fire-and-forget Timers in chat screens | Frontend Dev | pending | P1 |
+| CYC-079 | Cap unbounded message lists in AI chat screens | Backend Dev | pending | P2 |
+
+### Acceptance Criteria
+- **CYC-078**: Timers stored in fields and cancelled in dispose(). Mounted/hasClients guard in callbacks.
+- **CYC-079**: _messages capped at 100 entries. Oldest dropped. Gemini history uses sliding window.
+
+---
+
+## Epic 21: Data Wiring (Placeholder → Real Data)
+| ID | Title | Agent | Status | Priority |
+|----|-------|-------|--------|----------|
+| CYC-091 | Wire HeatmapScreen to real category stats with BLoC | Frontend Dev | pending | P1 |
+| CYC-092 | Wire ProfileScreen stats + settings to real data | Frontend Dev | pending | P1 |
+| CYC-093 | Wire ExamInfoScreen to Firestore exam dates | Frontend Dev | pending | P1 |
+| CYC-094 | Create abstract service interfaces for testability | Backend Dev | pending | P2 |
+| CYC-095 | Add TODO markers to all unmarked placeholder data | Frontend Dev | pending | P2 |
+
+### Acceptance Criteria
+- **CYC-091**: HeatmapBloc fetches from FirestoreService.getCategoryStats(). Real percentages, trends. No hardcoded data.
+- **CYC-092**: ProfileBloc or direct Firestore read for real streak, totalAnswered, averageScore, badges. Settings persisted in Hive.
+- **CYC-093**: ExamInfoBloc fetches from FirestoreService.getExamDates(). Countdown from real data.
+- **CYC-094**: Abstract IAuthService, IFirestoreService, IGeminiService, IBillingService. Concrete classes implement them. Registered via DI.
+- **CYC-095**: All hardcoded placeholder values have explicit // TODO: markers for IDE discoverability.
+
+---
+
+## Epic 22: Code Quality & Polish
+| ID | Title | Agent | Status | Priority |
+|----|-------|-------|--------|----------|
+| CYC-096 | Wire all navigation TODOs (paywall, notifications, answer review, date picker) | Frontend Dev | pending | P1 |
+| CYC-097 | Fix DI bypass in FlashcardsBloc and ExamSimulatorBloc | Backend Dev | pending | P1 |
+| CYC-098 | Add orElse guard to BillingService.buyPremium() | Backend Dev | pending | P1 |
+| CYC-099 | Fix hardcoded locale 'en' — read user's selected language | Frontend Dev | pending | P1 |
+| CYC-100 | Widget optimizations (const constructors, narrow BlocBuilders, cached SharedPreferences) | Frontend Dev | pending | P2 |
+| CYC-101 | Use Gemini systemInstruction parameter + cache ChatSession | Backend Dev | pending | P2 |
+| CYC-102 | Code quality cleanup (extract Hive helper, deduplicate checklist, fix magic numbers, add comments) | Backend Dev | pending | P2 |
+| CYC-103 | Production hardening (gate debug prints, sanitize error messages, fix email validation, gitignore) | Backend Dev | pending | P2 |
+
+### Acceptance Criteria
+- **CYC-096**: All 6 navigation TODOs wired to real screens. Paywall → PaywallScreen. Notifications → NotificationsScreen. Answer review → ReviewScreen. Date picker → DatePickerDialog.
+- **CYC-097**: Both BLoCs receive FirestoreService via context.read<FirestoreService>(). No fallback instantiation.
+- **CYC-098**: buyPremium uses firstWhere with orElse, handles missing product gracefully.
+- **CYC-099**: getText() receives user's language from context/preferences. All exam/flashcard screens use it.
+- **CYC-100**: Const constructors added. BlocBuilder scoped narrowly in ProfileScreen, FlashcardsScreen, AiTutorScreen. SharedPreferences cached in ChecklistScreen.
+- **CYC-101**: GeminiService uses GenerativeModel(systemInstruction:). ChatSession cached and reused per conversation.
+- **CYC-102**: Extract _getPendingList helper in ProgressSyncService. Deduplicate checklist base items. Use AppConstants for AI limits. Add comments to BillingService. Remove redundant Hive box open.
+- **CYC-103**: Debug prints gated with kDebugMode. Error messages show generic text to user, log details separately. Email validation uses proper regex. Explicit GoogleService-Info.plist in .gitignore.
+
+---
+
 ## Summary
 
 | Priority | Count | Description |
 |----------|-------|-------------|
-| P0 | 18 | Must-have for launch (foundation, auth, exam simulator, AI core, payments) |
-| P1 | 28 | Important for launch (flashcards, heatmap, notifications, offline, testing) |
-| P2 | 15 | Nice-to-have (badges, Keep Learning, polish, accessibility audit) |
-| **Total** | **61** | |
+| P0 | 18 + 9 = 27 | Original launch must-haves + critical/high security & architecture fixes |
+| P1 | 28 + 22 = 50 | Original important + high/medium review findings |
+| P2 | 15 + 11 = 26 | Original nice-to-have + low-priority polish |
+| **Total** | **103** | 61 original + 42 review tickets |
 
 ## User Stories
 
