@@ -56,6 +56,13 @@ firebase-debug.log
 firestore-debug.log
 ui-debug.log
 
+# Firebase config files — contain API keys, app IDs, and project identifiers.
+# Excluded from source control for security. Each developer must obtain these
+# from the Firebase console or run `flutterfire configure` locally.
+**/google-services.json
+**/GoogleService-Info.plist
+lib/firebase_options.dart
+
 # Environment
 .env
 .env.*
