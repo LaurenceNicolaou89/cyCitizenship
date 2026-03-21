@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../config/theme.dart';
+import '../../../core/models/user_model.dart';
+import '../../../core/services/firestore_service.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/bloc/auth_event.dart';
@@ -16,27 +19,103 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // Settings state (placeholder -- will persist later)
+  // Settings state — persisted via SharedPreferences
   bool _notificationsEnabled = true;
   bool _darkModeEnabled = false;
   String _selectedLanguage = 'English';
 
-  // Placeholder stats
-  static const _streak = 12;
-  static const _totalAnswered = 347;
-  static const _averageScore = 71;
+  // Stats from Firestore
+  int _streak = 0;
+  int _totalAnswered = 0;
+  int _averageScore = 0;
 
-  // Placeholder badges
-  static const _badges = [
-    _Badge('First Quiz', Icons.emoji_events, true),
-    _Badge('7-Day Streak', Icons.local_fire_department, true),
-    _Badge('50 Questions', Icons.quiz, true),
-    _Badge('Perfect Score', Icons.stars, false),
-    _Badge('Geography Pro', Icons.public, false),
-    _Badge('Culture Expert', Icons.museum, false),
-    _Badge('30-Day Streak', Icons.whatshot, false),
-    _Badge('All Categories', Icons.category, false),
+  // User model from Firestore
+  UserModel? _userModel;
+
+  // Loading flag
+  bool _isLoading = true;
+
+  // Badge definitions — unlocked status computed from user model
+  static const _badgeDefinitions = [
+    _BadgeDef('first_quiz', 'First Quiz', Icons.emoji_events),
+    _BadgeDef('7_day_streak', '7-Day Streak', Icons.local_fire_department),
+    _BadgeDef('50_questions', '50 Questions', Icons.quiz),
+    _BadgeDef('perfect_score', 'Perfect Score', Icons.stars),
+    _BadgeDef('geography_pro', 'Geography Pro', Icons.public),
+    _BadgeDef('culture_expert', 'Culture Expert', Icons.museum),
+    _BadgeDef('30_day_streak', '30-Day Streak', Icons.whatshot),
+    _BadgeDef('all_categories', 'All Categories', Icons.category),
   ];
+
+  // SharedPreferences keys
+  static const _keyDarkMode = 'profile_dark_mode';
+  static const _keyNotifications = 'profile_notifications';
+  static const _keyLanguage = 'profile_language';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+    _loadUserData();
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _darkModeEnabled = prefs.getBool(_keyDarkMode) ?? false;
+      _notificationsEnabled = prefs.getBool(_keyNotifications) ?? true;
+      _selectedLanguage = prefs.getString(_keyLanguage) ?? 'English';
+    });
+  }
+
+  Future<void> _loadUserData() async {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! AuthAuthenticated) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+
+    final userId = authState.user.uid;
+    final firestoreService = context.read<FirestoreService>();
+
+    try {
+      // Fetch user document and aggregate stats in parallel
+      final results = await Future.wait([
+        firestoreService.getUser(userId),
+        firestoreService.getUserAggregateStats(userId),
+      ]);
+
+      final userDoc = results[0] as dynamic;
+      final aggStats = results[1] as Map<String, int>;
+
+      UserModel? userModel;
+      if (userDoc.exists) {
+        userModel = UserModel.fromFirestore(userDoc);
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _userModel = userModel;
+        _streak = userModel?.streak ?? 0;
+        _totalAnswered = aggStats['totalAnswered'] ?? 0;
+        _averageScore = aggStats['averageScore'] ?? 0;
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _saveSetting(String key, dynamic value) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (value is bool) {
+      await prefs.setBool(key, value);
+    } else if (value is String) {
+      await prefs.setString(key, value);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,9 +129,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         builder: (context, state) {
           final isAuthenticated = state is AuthAuthenticated;
           final user = isAuthenticated ? state.user : null;
-          final displayName = user?.displayName ?? 'Guest User';
+          final displayName =
+              _userModel?.displayName ?? user?.displayName ?? 'Guest User';
           final email = user?.email ?? 'Not signed in';
           final initials = _getInitials(displayName);
+          final userBadges = _userModel?.badges ?? [];
 
           return ListView(
             padding: const EdgeInsets.all(AppSpacing.md),
@@ -88,31 +169,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: AppSpacing.lg),
 
               // Stats row
-              Row(
-                children: [
-                  _buildStatItem(
-                    context,
-                    icon: Icons.local_fire_department,
-                    value: '$_streak',
-                    label: 'Streak',
-                    color: AppColors.secondary,
-                  ),
-                  _buildStatItem(
-                    context,
-                    icon: Icons.quiz,
-                    value: '$_totalAnswered',
-                    label: 'Answered',
-                    color: AppColors.primary,
-                  ),
-                  _buildStatItem(
-                    context,
-                    icon: Icons.trending_up,
-                    value: '$_averageScore%',
-                    label: 'Avg Score',
-                    color: AppColors.success,
-                  ),
-                ],
-              ),
+              if (_isLoading)
+                const Center(child: CircularProgressIndicator())
+              else
+                Row(
+                  children: [
+                    _buildStatItem(
+                      context,
+                      icon: Icons.local_fire_department,
+                      value: '$_streak',
+                      label: 'Streak',
+                      color: AppColors.secondary,
+                    ),
+                    _buildStatItem(
+                      context,
+                      icon: Icons.quiz,
+                      value: '$_totalAnswered',
+                      label: 'Answered',
+                      color: AppColors.primary,
+                    ),
+                    _buildStatItem(
+                      context,
+                      icon: Icons.trending_up,
+                      value: '$_averageScore%',
+                      label: 'Avg Score',
+                      color: AppColors.success,
+                    ),
+                  ],
+                ),
               const SizedBox(height: AppSpacing.lg),
 
               // Subscription status
@@ -134,28 +218,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Free Plan',
-                              style: theme.textTheme.titleMedium),
-                          Text('5 questions/day, limited features',
-                              style: theme.textTheme.bodySmall),
+                          Text(
+                            (_userModel?.isPremium ?? false)
+                                ? 'Premium'
+                                : 'Free Plan',
+                            style: theme.textTheme.titleMedium,
+                          ),
+                          Text(
+                            (_userModel?.isPremium ?? false)
+                                ? 'All features unlocked'
+                                : '5 questions/day, limited features',
+                            style: theme.textTheme.bodySmall,
+                          ),
                         ],
                       ),
                     ),
-                    SizedBox(
-                      height: 36,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          // TODO: Navigate to paywall
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.secondary,
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 16),
-                          minimumSize: Size.zero,
+                    if (!(_userModel?.isPremium ?? false))
+                      SizedBox(
+                        height: 36,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            // TODO: Navigate to paywall
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.secondary,
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16),
+                            minimumSize: Size.zero,
+                          ),
+                          child: const Text('Upgrade'),
                         ),
-                        child: const Text('Upgrade'),
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -173,10 +266,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   crossAxisSpacing: AppSpacing.sm,
                   childAspectRatio: 0.8,
                 ),
-                itemCount: _badges.length,
+                itemCount: _badgeDefinitions.length,
                 itemBuilder: (context, index) {
-                  final badge = _badges[index];
-                  return _buildBadgeItem(context, badge);
+                  final def = _badgeDefinitions[index];
+                  final unlocked = userBadges.contains(def.id);
+                  return _buildBadgeItem(
+                    context,
+                    _Badge(def.label, def.icon, unlocked),
+                  );
                 },
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -206,6 +303,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         onChanged: (val) {
                           if (val != null) {
                             setState(() => _selectedLanguage = val);
+                            _saveSetting(_keyLanguage, val);
                           }
                         },
                       ),
@@ -221,6 +319,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       activeTrackColor: AppColors.primary,
                       onChanged: (val) {
                         setState(() => _notificationsEnabled = val);
+                        _saveSetting(_keyNotifications, val);
                       },
                     ),
                     const Divider(height: 0),
@@ -233,6 +332,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       activeTrackColor: AppColors.primary,
                       onChanged: (val) {
                         setState(() => _darkModeEnabled = val);
+                        _saveSetting(_keyDarkMode, val);
                       },
                     ),
                     const Divider(height: 0),
@@ -242,7 +342,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       leading: const Icon(Icons.calendar_month),
                       title: const Text('Exam Target Date'),
                       trailing: Text(
-                        'July 2026',
+                        _userModel?.examTarget ?? 'Not set',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: AppColors.primary,
                         ),
@@ -332,15 +432,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
           decoration: BoxDecoration(
             color: badge.unlocked
                 ? AppColors.secondary.withValues(alpha: 0.15)
-                : Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),
+                : Theme.of(context)
+                    .colorScheme
+                    .outlineVariant
+                    .withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(14),
           ),
           child: Icon(
             badge.icon,
             size: 26,
-            color: badge.unlocked
-                ? AppColors.secondary
-                : AppColors.disabled,
+            color: badge.unlocked ? AppColors.secondary : AppColors.disabled,
           ),
         ),
         const SizedBox(height: 4),
@@ -368,6 +469,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
     return parts.first[0].toUpperCase();
   }
+}
+
+class _BadgeDef {
+  final String id;
+  final String label;
+  final IconData icon;
+  const _BadgeDef(this.id, this.label, this.icon);
 }
 
 class _Badge {

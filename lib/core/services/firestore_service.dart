@@ -86,6 +86,34 @@ class FirestoreService {
         .get();
   }
 
+  /// Returns aggregate stats: {totalAnswered: int, averageScore: int}
+  /// Computed from category_stats subcollection.
+  Future<Map<String, int>> getUserAggregateStats(String userId) async {
+    final snapshot = await getCategoryStats(userId);
+    if (snapshot.docs.isEmpty) {
+      return {'totalAnswered': 0, 'averageScore': 0};
+    }
+
+    int totalAnswered = 0;
+    int totalCorrect = 0;
+
+    for (final doc in snapshot.docs) {
+      final data = doc.data() as Map<String, dynamic>;
+      final answered = (data['totalAnswered'] ?? 0) as int;
+      final correct = (data['correctAnswers'] ?? 0) as int;
+      totalAnswered += answered;
+      totalCorrect += correct;
+    }
+
+    final averageScore =
+        totalAnswered > 0 ? ((totalCorrect / totalAnswered) * 100).round() : 0;
+
+    return {
+      'totalAnswered': totalAnswered,
+      'averageScore': averageScore,
+    };
+  }
+
   // Exam Dates
   Future<QuerySnapshot> getExamDates() async {
     return await _db
