@@ -42,9 +42,7 @@ class CyCitizenshipApp extends StatelessWidget {
         RepositoryProvider(
           create: (_) => NotificationService()..initialize(),
         ),
-        RepositoryProvider(
-          create: (_) => BillingService()..initialize(),
-        ),
+        RepositoryProvider(create: (_) => BillingService()),
         RepositoryProvider(create: (_) => AnalyticsService()),
       ],
       child: BlocProvider(
