@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive/hive.dart';
 
@@ -109,7 +110,10 @@ class FlashcardsBloc extends Bloc<FlashcardsEvent, FlashcardsState> {
         boxLevels: boxLevels,
       ));
     } catch (e) {
-      emit(FlashcardsError('Failed to load flashcards: $e'));
+      if (kDebugMode) {
+        debugPrint('Failed to load flashcards: $e');
+      }
+      emit(const FlashcardsError('Something went wrong. Please try again.'));
     }
   }
 

@@ -55,6 +55,7 @@ pubspec.lock
 firebase-debug.log
 firestore-debug.log
 ui-debug.log
+**/GoogleService-Info.plist
 
 # Firebase config files — contain API keys, app IDs, and project identifiers.
 # Excluded from source control for security. Each developer must obtain these

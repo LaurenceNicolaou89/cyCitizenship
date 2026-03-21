@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -31,9 +32,13 @@ void main() async {
   if (!seeded) {
     SeedData.seedFirestore(FirebaseFirestore.instance).then((_) {
       prefs.setBool('firestore_seeded', true);
-      debugPrint('Firestore seeded successfully');
+      if (kDebugMode) {
+        debugPrint('Firestore seeded successfully');
+      }
     }).catchError((e) {
-      debugPrint('Seed data failed (will retry next launch): $e');
+      if (kDebugMode) {
+        debugPrint('Seed data failed (will retry next launch): $e');
+      }
     });
   }
 

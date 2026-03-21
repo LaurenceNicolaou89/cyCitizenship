@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../config/constants.dart';
@@ -78,7 +79,10 @@ class ExamSimulatorBloc
         remainingSeconds: AppConstants.examDurationMinutes * 60,
       ));
     } catch (e) {
-      emit(ExamError('Failed to load exam questions: $e'));
+      if (kDebugMode) {
+        debugPrint('Failed to load exam questions: $e');
+      }
+      emit(const ExamError('Something went wrong. Please try again.'));
     }
   }
 
