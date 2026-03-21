@@ -298,9 +298,6 @@ class _GreekPracticeViewState extends State<_GreekPracticeView> {
       ),
     );
   }
-
-    );
-  }
 }
 
 class _LevelButton extends StatelessWidget {

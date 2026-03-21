@@ -1,15 +1,6 @@
 import 'package:cloud_functions/cloud_functions.dart';
 
-/// Message structure for chat history sent to Cloud Functions.
-class ChatMessage {
-  final String role;
-  final String content;
-
-  const ChatMessage({required this.role, required this.content});
-
-  Map<String, dynamic> toMap() => {'role': role, 'content': content};
-}
-
+import '../models/chat_message.dart';
 import '../utils/prompt_sanitizer.dart';
 import 'i_gemini_service.dart';
 
@@ -29,7 +20,9 @@ class GeminiService implements IGeminiService {
     final sanitized = PromptSanitizer.sanitize(message);
     final callable = _functions.httpsCallable('chatWithTutor');
     final result = await callable.call<Map<String, dynamic>>({
-      'messages': history.map((m) => m.toMap()).toList(),
+      'messages': history
+          .map((m) => {'role': m.role, 'content': m.content})
+          .toList(),
       'message': sanitized,
     });
     return (result.data['response'] as String?) ??
@@ -63,7 +56,9 @@ class GeminiService implements IGeminiService {
     final sanitized = PromptSanitizer.sanitize(message);
     final callable = _functions.httpsCallable('greekPractice');
     final result = await callable.call<Map<String, dynamic>>({
-      'messages': history.map((m) => m.toMap()).toList(),
+      'messages': history
+          .map((m) => {'role': m.role, 'content': m.content})
+          .toList(),
       'message': sanitized,
       'level': level,
     });

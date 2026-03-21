@@ -67,7 +67,7 @@ class _CyCitizenshipAppState extends State<CyCitizenshipApp> {
         RepositoryProvider.value(value: _notificationService),
         RepositoryProvider.value(value: _billingService),
         RepositoryProvider(create: (_) => AnalyticsService()),
-        RepositoryProvider(create: (_) => AiRateLimitService(prefs)),
+        RepositoryProvider(create: (_) => AiRateLimitService(widget.prefs)),
       ],
       child: MultiBlocProvider(
         providers: [

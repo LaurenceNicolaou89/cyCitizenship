@@ -3,8 +3,6 @@ import 'package:equatable/equatable.dart';
 // Re-export ChatMessage from shared location for backward compatibility
 export '../../../core/models/chat_message.dart';
 
-import '../../../core/models/chat_message.dart';
-
 class AiTutorChatMessage extends Equatable {
   final String role;
   final String content;

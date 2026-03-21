@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
 
 import '../../../core/models/chat_message.dart';
 import '../../../core/services/gemini_service.dart';
@@ -73,11 +72,13 @@ class GreekPracticeBloc
       final history = _messages.length > 1
           ? _messages
               .sublist(0, _messages.length - 1)
-              .map((m) => Content(m.isUser ? 'user' : 'model', [
-                    TextPart(m.content),
-                  ]))
+              .map((m) => ChatMessage(
+                    role: m.isUser ? 'user' : 'model',
+                    content: m.content,
+                    timestamp: m.timestamp,
+                  ))
               .toList()
-          : <Content>[];
+          : <ChatMessage>[];
 
       final response = await _geminiService.greekPractice(
         history,

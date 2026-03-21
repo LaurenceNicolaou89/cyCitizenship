@@ -90,6 +90,7 @@ class AiTutorBloc extends Bloc<AiTutorEvent, AiTutorState> {
           .map((m) => ChatMessage(
                 role: m.role == 'user' ? 'user' : 'model',
                 content: m.content,
+                timestamp: m.timestamp,
               ))
           .toList();
 

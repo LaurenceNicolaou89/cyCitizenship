@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/services/ai_rate_limit_service.dart';
 import '../core/services/gemini_service.dart';
 import '../features/home/bloc/home_bloc.dart';
 import '../features/home/bloc/home_event.dart';
@@ -23,7 +24,6 @@ import '../features/auth/screens/login_screen.dart';
 import '../features/auth/screens/onboarding_screen.dart';
 import '../features/auth/bloc/auth_bloc.dart';
 import '../features/auth/bloc/auth_state.dart';
-import '../features/home/bloc/home_bloc.dart';
 import '../features/home/bloc/home_state.dart';
 import '../shared/widgets/app_shell.dart';
 import '../shared/widgets/paywall_screen.dart';
@@ -116,6 +116,7 @@ GoRouter createRouter({required bool onboardingComplete}) => GoRouter(
           BlocProvider(
             create: (context) => AiTutorBloc(
               geminiService: context.read<GeminiService>(),
+              rateLimitService: context.read<AiRateLimitService>(),
             ),
           ),
         ],
