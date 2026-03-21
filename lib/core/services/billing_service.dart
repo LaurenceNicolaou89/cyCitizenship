@@ -91,7 +91,6 @@ class BillingService implements IBillingService {
     }
   }
 
-<<<<<<< HEAD
   /// Verify the purchase server-side before granting premium access.
   ///
   /// Calls the `verifyPurchase` Cloud Function which validates the receipt
