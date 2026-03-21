@@ -1,7 +1,7 @@
 import 'package:google_generative_ai/google_generative_ai.dart';
 
 class GeminiService {
-  late final GenerativeModel _model;
+  final String _apiKey;
 
   static const _tutorSystemPrompt = '''
 You are an expert tutor helping students prepare for the Cyprus citizenship exam.
@@ -29,24 +29,49 @@ Adapt your level: A2 (elementary) or B1 (intermediate) as requested.
 Use daily life scenarios relevant to living in Cyprus.
 ''';
 
-  GeminiService({required String apiKey}) {
-    _model = GenerativeModel(
+  /// Dedicated models with systemInstruction set, avoiding per-message overhead.
+  late final GenerativeModel _tutorModel;
+  late final GenerativeModel _practiceModel;
+  late final GenerativeModel _greekModel;
+
+  /// Cached chat sessions, reused across messages within the same conversation.
+  ChatSession? _tutorSession;
+  ChatSession? _greekSession;
+
+  /// Track the Greek level so we can reset the session when it changes.
+  String? _greekSessionLevel;
+
+  GeminiService({required String apiKey}) : _apiKey = apiKey {
+    _tutorModel = GenerativeModel(
       model: 'gemini-2.0-flash',
-      apiKey: apiKey,
+      apiKey: _apiKey,
+      systemInstruction: Content.system(_tutorSystemPrompt),
+    );
+    _practiceModel = GenerativeModel(
+      model: 'gemini-2.0-flash',
+      apiKey: _apiKey,
+      systemInstruction: Content.system(_smartPracticeSystemPrompt),
+    );
+    _greekModel = GenerativeModel(
+      model: 'gemini-2.0-flash',
+      apiKey: _apiKey,
+      systemInstruction: Content.system(_greekPracticeSystemPrompt),
     );
   }
 
+  /// Send a message to the AI tutor, reusing the cached session.
+  ///
+  /// The [history] parameter is only used to seed the session when it is first
+  /// created (or after a reset). Subsequent calls reuse the existing session
+  /// which already contains the full conversation history.
   Future<String> chatWithTutor(List<Content> history, String message) async {
-    final chat = _model.startChat(
-      history: [
-        Content.text(_tutorSystemPrompt),
-        ...history,
-      ],
-    );
-    final response = await chat.sendMessage(Content.text(message));
+    _tutorSession ??= _tutorModel.startChat(history: history);
+    final response = await _tutorSession!.sendMessage(Content.text(message));
     return response.text ?? 'Sorry, I could not generate a response.';
   }
 
+  /// Generate a practice question. Each call is independent so no session
+  /// caching is needed — but systemInstruction still saves tokens.
   Future<String> generatePracticeQuestion({
     required String category,
     required String difficulty,
@@ -54,25 +79,46 @@ Use daily life scenarios relevant to living in Cyprus.
   }) async {
     final prompt =
         'Generate a $difficulty $category question for the Cyprus citizenship exam. Respond in $language.';
-    final chat = _model.startChat(
-      history: [Content.text(_smartPracticeSystemPrompt)],
-    );
+    final chat = _practiceModel.startChat();
     final response = await chat.sendMessage(Content.text(prompt));
     return response.text ?? '{}';
   }
 
+  /// Send a message in the Greek practice conversation, reusing the cached
+  /// session. If the [level] changes, the session is automatically reset.
   Future<String> greekPractice(
     List<Content> history,
     String message, {
     String level = 'B1',
   }) async {
-    final chat = _model.startChat(
-      history: [
-        Content.text('$_greekPracticeSystemPrompt\nCurrent level: $level'),
-        ...history,
-      ],
-    );
-    final response = await chat.sendMessage(Content.text(message));
+    // Reset session if the level has changed.
+    if (_greekSession == null || _greekSessionLevel != level) {
+      _greekSessionLevel = level;
+      _greekSession = _greekModel.startChat(
+        history: [
+          Content.text('Current level: $level'),
+          ...history,
+        ],
+      );
+    }
+    final response = await _greekSession!.sendMessage(Content.text(message));
     return response.text ?? 'Sorry, I could not generate a response.';
+  }
+
+  /// Reset the tutor chat session (e.g. when starting a new conversation).
+  void resetTutorSession() {
+    _tutorSession = null;
+  }
+
+  /// Reset the Greek practice session.
+  void resetGreekSession() {
+    _greekSession = null;
+    _greekSessionLevel = null;
+  }
+
+  /// Reset all cached sessions.
+  void resetAllSessions() {
+    resetTutorSession();
+    resetGreekSession();
   }
 }

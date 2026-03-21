@@ -153,6 +153,7 @@ class _GreekPracticeScreenState extends State<GreekPracticeScreen> {
             IconButton(
               icon: const Icon(Icons.delete_outline),
               onPressed: () {
+                widget.geminiService.resetGreekSession();
                 setState(() {
                   _messages.clear();
                 });

@@ -122,6 +122,7 @@ class AiTutorBloc extends Bloc<AiTutorEvent, AiTutorState> {
     Emitter<AiTutorState> emit,
   ) async {
     _messages = [];
+    _geminiService.resetTutorSession();
     emit(AiTutorLoaded(
       messages: const [],
       messagesUsedToday: _messagesUsedToday,
