@@ -46,19 +46,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: AppBar(
         title: const Text('Profile'),
       ),
-      body: BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, state) {
-          final isAuthenticated = state is AuthAuthenticated;
-          final user = isAuthenticated ? state.user : null;
-          final displayName = user?.displayName ?? 'Guest User';
-          final email = user?.email ?? 'Not signed in';
-          final initials = _getInitials(displayName);
+      body: ListView(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        children: [
+          // Avatar and user info (auth-dependent)
+          BlocBuilder<AuthBloc, AuthState>(
+            buildWhen: (prev, curr) =>
+                prev.runtimeType != curr.runtimeType,
+            builder: (context, state) {
+              final isAuthenticated = state is AuthAuthenticated;
+              final user = isAuthenticated ? state.user : null;
+              final displayName = user?.displayName ?? 'Guest User';
+              final email = user?.email ?? 'Not signed in';
+              final initials = _getInitials(displayName);
 
-          return ListView(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            children: [
-              // Avatar and user info
-              Center(
+              return Center(
                 child: Column(
                   children: [
                     CircleAvatar(
@@ -84,10 +86,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
+              );
+            },
+          ),
+          const SizedBox(height: AppSpacing.lg),
 
-              // Stats row
+          // Stats row
               Row(
                 children: [
                   _buildStatItem(
@@ -256,9 +260,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: AppSpacing.lg),
 
-              // Sign out
-              if (isAuthenticated)
-                SizedBox(
+          // Sign out (auth-dependent)
+          BlocBuilder<AuthBloc, AuthState>(
+            buildWhen: (prev, curr) =>
+                prev.runtimeType != curr.runtimeType,
+            builder: (context, state) {
+              final isAuthenticated = state is AuthAuthenticated;
+              if (isAuthenticated) {
+                return SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: () {
@@ -273,20 +282,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       minimumSize: const Size(double.infinity, 48),
                     ),
                   ),
-                )
-              else
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () => context.go('/login'),
-                    icon: const Icon(Icons.login),
-                    label: const Text('Sign In'),
-                  ),
+                );
+              }
+              return SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => context.go('/login'),
+                  icon: const Icon(Icons.login),
+                  label: const Text('Sign In'),
                 ),
-              const SizedBox(height: AppSpacing.lg),
-            ],
-          );
-        },
+              );
+            },
+          ),
+          const SizedBox(height: AppSpacing.lg),
+        ],
       ),
     );
   }

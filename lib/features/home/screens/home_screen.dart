@@ -134,7 +134,7 @@ class _HomeContent extends StatelessWidget {
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: AppSpacing.sm),
-          _QuickActionsGrid(),
+          const _QuickActionsGrid(),
         ],
       ),
     );
@@ -269,6 +269,8 @@ class _DailyQuestionCard extends StatelessWidget {
 }
 
 class _QuickActionsGrid extends StatelessWidget {
+  const _QuickActionsGrid();
+
   @override
   Widget build(BuildContext context) {
     final actions = [

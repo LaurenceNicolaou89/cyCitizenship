@@ -46,7 +46,7 @@ class _ExamSimulatorView extends StatelessWidget {
       },
       builder: (context, state) {
         if (state is ExamInitial) {
-          return _PreExamView();
+          return const _PreExamView();
         }
         if (state is ExamLoading) {
           return Scaffold(
@@ -97,6 +97,8 @@ class _ExamSimulatorView extends StatelessWidget {
 }
 
 class _PreExamView extends StatelessWidget {
+  const _PreExamView();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
