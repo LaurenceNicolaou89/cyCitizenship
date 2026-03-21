@@ -107,5 +107,18 @@ class UserModel extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, email, isPremium, streak];
+  List<Object?> get props => [
+        id,
+        email,
+        displayName,
+        language,
+        isPremium,
+        purchaseDate,
+        createdAt,
+        streak,
+        lastStudyDate,
+        badges,
+        examTarget,
+        checklist,
+      ];
 }
