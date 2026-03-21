@@ -1,35 +1,37 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../config/theme.dart';
+import '../../../core/models/chat_message.dart';
 import '../../../core/services/gemini_service.dart';
+import '../bloc/greek_practice_bloc.dart';
+import '../bloc/greek_practice_event.dart';
+import '../bloc/greek_practice_state.dart';
 
-class _GreekChatMessage {
-  final String role;
-  final String content;
-  final DateTime timestamp;
-
-  const _GreekChatMessage({
-    required this.role,
-    required this.content,
-    required this.timestamp,
-  });
-
-  bool get isUser => role == 'user';
-}
-
-class GreekPracticeScreen extends StatefulWidget {
-  final GeminiService geminiService;
-
-  const GreekPracticeScreen({super.key, required this.geminiService});
+class GreekPracticeScreen extends StatelessWidget {
+  const GreekPracticeScreen({super.key});
 
   @override
-  State<GreekPracticeScreen> createState() => _GreekPracticeScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => GreekPracticeBloc(
+        geminiService: context.read<GeminiService>(),
+      ),
+      child: const _GreekPracticeView(),
+    );
+  }
 }
 
-class _GreekPracticeScreenState extends State<GreekPracticeScreen> {
+class _GreekPracticeView extends StatefulWidget {
+  const _GreekPracticeView();
+
+  @override
+  State<_GreekPracticeView> createState() => _GreekPracticeViewState();
+}
+
+class _GreekPracticeViewState extends State<_GreekPracticeView> {
   static const _scenarios = [
     ('Ordering food', Icons.restaurant_rounded),
     ('Asking directions', Icons.directions_rounded),
@@ -40,10 +42,6 @@ class _GreekPracticeScreenState extends State<GreekPracticeScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
   final _focusNode = FocusNode();
-
-  String _level = 'B1';
-  final List<_GreekChatMessage> _messages = [];
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -67,61 +65,19 @@ class _GreekPracticeScreenState extends State<GreekPracticeScreen> {
     }
   }
 
-  List<Content> _buildHistory() {
-    // Exclude the last user message (it will be sent as the new message)
-    final historyMessages =
-        _messages.length > 1 ? _messages.sublist(0, _messages.length - 1) : [];
-    return historyMessages
-        .map((m) => Content(m.isUser ? 'user' : 'model', [
-              TextPart(m.content),
-            ]))
-        .toList();
+  void _sendMessage(String text) {
+    if (text.trim().isEmpty) return;
+    _controller.clear();
+    context.read<GreekPracticeBloc>().add(SendGreekMessage(text));
   }
 
-  Future<void> _sendMessage(String text) async {
-    if (text.trim().isEmpty || _isLoading) return;
-
-    setState(() {
-      _messages.add(_GreekChatMessage(
-        role: 'user',
-        content: text.trim(),
-        timestamp: DateTime.now(),
-      ));
-      _isLoading = true;
-    });
-    _controller.clear();
-    _scrollToBottom();
-
-    try {
-      final history = _buildHistory();
-      final response = await widget.geminiService.greekPractice(
-        history,
-        text.trim(),
-        level: _level,
-      );
-
-      setState(() {
-        _messages.add(_GreekChatMessage(
-          role: 'assistant',
-          content: response,
-          timestamp: DateTime.now(),
-        ));
-        _isLoading = false;
-      });
-      _scrollToBottom();
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to get response. Please try again.'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    }
+  String _currentLevel(GreekPracticeState state) {
+    return switch (state) {
+      GreekPracticeInitial(:final level) => level,
+      GreekPracticeLoading(:final level) => level,
+      GreekPracticeLoaded(:final level) => level,
+      GreekPracticeError(:final level) => level,
+    };
   }
 
   @override
@@ -130,24 +86,64 @@ class _GreekPracticeScreenState extends State<GreekPracticeScreen> {
       appBar: AppBar(
         title: const Text('Greek Practice'),
         actions: [
-          if (_messages.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.delete_outline),
-              onPressed: () {
-                setState(() {
-                  _messages.clear();
-                });
-              },
-            ),
+          BlocBuilder<GreekPracticeBloc, GreekPracticeState>(
+            builder: (context, state) {
+              final messages = _extractMessages(state);
+              if (messages.isNotEmpty) {
+                return IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () {
+                    context
+                        .read<GreekPracticeBloc>()
+                        .add(const ResetGreekConversation());
+                  },
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
         ],
       ),
       body: Column(
         children: [
           _buildLevelToggle(),
           Expanded(
-            child: _messages.isEmpty
-                ? _buildScenarioSelector()
-                : _buildChatView(),
+            child: BlocConsumer<GreekPracticeBloc, GreekPracticeState>(
+              listener: (context, state) {
+                if (state is GreekPracticeLoaded ||
+                    state is GreekPracticeLoading) {
+                  _scrollToBottom();
+                }
+                if (state is GreekPracticeError) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(state.message),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              },
+              builder: (context, state) {
+                final messages = _extractMessages(state);
+                final isLoading = state is GreekPracticeLoading;
+
+                if (messages.isEmpty && !isLoading) {
+                  return _buildScenarioSelector(state);
+                }
+
+                return ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  itemCount: messages.length + (isLoading ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == messages.length && isLoading) {
+                      return const _TypingIndicator();
+                    }
+                    return _MessageBubble(message: messages[index]);
+                  },
+                );
+              },
+            ),
           ),
           _buildInputField(),
         ],
@@ -155,40 +151,59 @@ class _GreekPracticeScreenState extends State<GreekPracticeScreen> {
     );
   }
 
+  List<ChatMessage> _extractMessages(GreekPracticeState state) {
+    return switch (state) {
+      GreekPracticeLoaded(:final messages) => messages,
+      GreekPracticeLoading(:final messages) => messages,
+      GreekPracticeError(:final previousMessages) => previousMessages,
+      _ => <ChatMessage>[],
+    };
+  }
+
   Widget _buildLevelToggle() {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      child: Row(
-        children: [
-          Text(
-            'Level:',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+    return BlocBuilder<GreekPracticeBloc, GreekPracticeState>(
+      builder: (context, state) {
+        final level = _currentLevel(state);
+        return Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
           ),
-          const SizedBox(width: AppSpacing.sm),
-          _LevelButton(
-            label: 'A2',
-            subtitle: 'Elementary',
-            isSelected: _level == 'A2',
-            onTap: () => setState(() => _level = 'A2'),
+          child: Row(
+            children: [
+              Text(
+                'Level:',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              _LevelButton(
+                label: 'A2',
+                subtitle: 'Elementary',
+                isSelected: level == 'A2',
+                onTap: () => context
+                    .read<GreekPracticeBloc>()
+                    .add(const SwitchLanguageLevel('A2')),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              _LevelButton(
+                label: 'B1',
+                subtitle: 'Intermediate',
+                isSelected: level == 'B1',
+                onTap: () => context
+                    .read<GreekPracticeBloc>()
+                    .add(const SwitchLanguageLevel('B1')),
+              ),
+            ],
           ),
-          const SizedBox(width: AppSpacing.sm),
-          _LevelButton(
-            label: 'B1',
-            subtitle: 'Intermediate',
-            isSelected: _level == 'B1',
-            onTap: () => setState(() => _level = 'B1'),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildScenarioSelector() {
+  Widget _buildScenarioSelector(GreekPracticeState state) {
+    final level = _currentLevel(state);
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.xl),
@@ -232,7 +247,7 @@ class _GreekPracticeScreenState extends State<GreekPracticeScreen> {
                   child: OutlinedButton.icon(
                     onPressed: () => _sendMessage(
                       "Let's practice a conversation about: $label. "
-                      "Start the dialogue in Greek at $_level level.",
+                      "Start the dialogue in Greek at $level level.",
                     ),
                     icon: Icon(icon),
                     label: Text(label),
@@ -250,20 +265,6 @@ class _GreekPracticeScreenState extends State<GreekPracticeScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildChatView() {
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.all(AppSpacing.md),
-      itemCount: _messages.length + (_isLoading ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index == _messages.length && _isLoading) {
-          return const _TypingIndicator();
-        }
-        return _MessageBubble(message: _messages[index]);
-      },
     );
   }
 
@@ -361,9 +362,7 @@ class _LevelButton extends StatelessWidget {
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected
-                ? AppColors.success
-                : AppColors.border,
+            color: isSelected ? AppColors.success : AppColors.border,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -382,9 +381,8 @@ class _LevelButton extends StatelessWidget {
               subtitle,
               style: TextStyle(
                 fontSize: 10,
-                color: isSelected
-                    ? AppColors.success
-                    : AppColors.textSecondary,
+                color:
+                    isSelected ? AppColors.success : AppColors.textSecondary,
               ),
             ),
           ],
@@ -395,7 +393,7 @@ class _LevelButton extends StatelessWidget {
 }
 
 class _MessageBubble extends StatelessWidget {
-  final _GreekChatMessage message;
+  final ChatMessage message;
 
   const _MessageBubble({required this.message});
 

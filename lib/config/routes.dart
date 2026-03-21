@@ -118,9 +118,7 @@ GoRouter createRouter({required bool onboardingComplete}) => GoRouter(
     ),
     GoRoute(
       path: '/greek-practice',
-      builder: (context, state) => GreekPracticeScreen(
-        geminiService: context.read<GeminiService>(),
-      ),
+      builder: (context, state) => const GreekPracticeScreen(),
     ),
     GoRoute(
       path: '/exam-map',
