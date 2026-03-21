@@ -30,6 +30,12 @@ class GreekPracticeScreen extends StatefulWidget {
 }
 
 class _GreekPracticeScreenState extends State<GreekPracticeScreen> {
+  /// Maximum messages retained in the UI list.
+  static const _maxMessages = 100;
+
+  /// Sliding window size sent to Gemini to limit token usage.
+  static const _geminiWindowSize = 50;
+
   static const _scenarios = [
     ('Ordering food', Icons.restaurant_rounded),
     ('Asking directions', Icons.directions_rounded),
@@ -68,14 +74,26 @@ class _GreekPracticeScreenState extends State<GreekPracticeScreen> {
   }
 
   List<Content> _buildHistory() {
-    // Exclude the last user message (it will be sent as the new message)
-    final historyMessages =
-        _messages.length > 1 ? _messages.sublist(0, _messages.length - 1) : [];
-    return historyMessages
+    // Exclude the last user message (it will be sent as the new message).
+    // Use a sliding window to limit token usage sent to Gemini.
+    final allExceptLast =
+        _messages.length > 1 ? _messages.sublist(0, _messages.length - 1) : <_GreekChatMessage>[];
+    final windowStart = allExceptLast.length > _geminiWindowSize
+        ? allExceptLast.length - _geminiWindowSize
+        : 0;
+    return allExceptLast
+        .sublist(windowStart)
         .map((m) => Content(m.isUser ? 'user' : 'model', [
               TextPart(m.content),
             ]))
         .toList();
+  }
+
+  /// Trims the message list to [_maxMessages], dropping the oldest entries.
+  void _trimMessages() {
+    if (_messages.length > _maxMessages) {
+      _messages.removeRange(0, _messages.length - _maxMessages);
+    }
   }
 
   Future<void> _sendMessage(String text) async {
@@ -106,6 +124,7 @@ class _GreekPracticeScreenState extends State<GreekPracticeScreen> {
           content: response,
           timestamp: DateTime.now(),
         ));
+        _trimMessages();
         _isLoading = false;
       });
       _scrollToBottom();
