@@ -33,6 +33,17 @@ class _ExamSimulatorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ExamSimulatorBloc, ExamSimulatorState>(
+      buildWhen: (previous, current) {
+        // Skip rebuild when only the timer changed (same state type,
+        // same question index, same selected answer, same answers map).
+        if (previous is ExamInProgress && current is ExamInProgress) {
+          return previous.currentIndex != current.currentIndex ||
+              previous.selectedIndex != current.selectedIndex ||
+              previous.answers != current.answers ||
+              previous.questions != current.questions;
+        }
+        return true;
+      },
       builder: (context, state) {
         if (state is ExamInitial) {
           return _PreExamView();
@@ -278,7 +289,7 @@ class _InExamView extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(right: AppSpacing.md),
             child: Center(
-              child: _TimerChip(timerDisplay: state.timerDisplay),
+              child: _TimerChipSelector(),
             ),
           ),
         ],
@@ -412,6 +423,19 @@ class _InExamView extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _TimerChipSelector extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return BlocSelector<ExamSimulatorBloc, ExamSimulatorState, String>(
+      selector: (state) =>
+          state is ExamInProgress ? state.timerDisplay : '--:--',
+      builder: (context, timerDisplay) {
+        return _TimerChip(timerDisplay: timerDisplay);
+      },
     );
   }
 }
