@@ -70,6 +70,7 @@ class PromptSanitizer {
     }
 
     // Neutralize injection patterns by replacing with [filtered]
+    // so it becomes inert text rather than an instruction
     for (final pattern in _injectionPatterns) {
       cleaned = cleaned.replaceAllMapped(pattern, (match) {
         return '[filtered]';
