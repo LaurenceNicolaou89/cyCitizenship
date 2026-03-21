@@ -41,5 +41,8 @@ void main() async {
     FlutterError.presentError(details);
   };
 
-  runApp(CyCitizenshipApp(onboardingComplete: onboardingComplete));
+  runApp(CyCitizenshipApp(
+    onboardingComplete: onboardingComplete,
+    prefs: prefs,
+  ));
 }

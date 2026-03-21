@@ -1,43 +1,29 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../config/theme.dart';
 import '../../../core/services/gemini_service.dart';
 import '../../../shared/widgets/answer_option.dart';
+import '../bloc/ai_practice_bloc.dart';
+import '../bloc/ai_practice_event.dart';
+import '../bloc/ai_practice_state.dart';
 
-class AiPracticeScreen extends StatefulWidget {
-  final GeminiService geminiService;
-
-  const AiPracticeScreen({super.key, required this.geminiService});
+class AiPracticeScreen extends StatelessWidget {
+  const AiPracticeScreen({super.key});
 
   @override
-  State<AiPracticeScreen> createState() => _AiPracticeScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => AiPracticeBloc(
+        geminiService: context.read<GeminiService>(),
+      ),
+      child: const _AiPracticeView(),
+    );
+  }
 }
 
-class _AiPracticeScreenState extends State<AiPracticeScreen> {
-  static const _categories = [
-    'History',
-    'Politics',
-    'Geography',
-    'Culture',
-    'Daily Life',
-  ];
-
-  // Categories where the user tends to score lower (placeholder for now)
-  static const _weakCategories = {'Politics', 'Geography'};
-
-  String _selectedCategory = 'History';
-  bool _isLoading = false;
-  String? _errorMessage;
-
-  // Current question state
-  String? _question;
-  List<String> _options = [];
-  int? _correctIndex;
-  String? _explanation;
-  int? _selectedIndex;
-  bool _answered = false;
+class _AiPracticeView extends StatelessWidget {
+  const _AiPracticeView();
 
   @override
   Widget build(BuildContext context) {
@@ -47,78 +33,93 @@ class _AiPracticeScreenState extends State<AiPracticeScreen> {
       ),
       body: Column(
         children: [
-          _buildCategorySelector(),
+          _buildCategorySelector(context),
           Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _question != null
-                    ? _buildQuestionView()
-                    : _buildEmptyState(),
+            child: BlocBuilder<AiPracticeBloc, AiPracticeState>(
+              builder: (context, state) {
+                if (state is AiPracticeLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (state is AiPracticeLoaded) {
+                  return _buildQuestionView(context, state);
+                }
+                if (state is AiPracticeError) {
+                  return _buildErrorState(context, state);
+                }
+                return _buildEmptyState(context);
+              },
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildCategorySelector() {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      height: 56,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: _categories.length,
-        separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
-        itemBuilder: (context, index) {
-          final category = _categories[index];
-          final isSelected = _selectedCategory == category;
-          final isWeak = _weakCategories.contains(category);
+  Widget _buildCategorySelector(BuildContext context) {
+    return BlocBuilder<AiPracticeBloc, AiPracticeState>(
+      buildWhen: (previous, current) =>
+          previous.selectedCategory != current.selectedCategory,
+      builder: (context, state) {
+        return Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
+          height: 56,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: AiPracticeBloc.categories.length,
+            separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
+            itemBuilder: (context, index) {
+              final category = AiPracticeBloc.categories[index];
+              final isSelected = state.selectedCategory == category;
+              final isWeak = state.weakCategories.contains(category);
 
-          return FilterChip(
-            label: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(category),
-                if (isWeak) ...[
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.trending_down_rounded,
-                    size: 14,
-                    color: isSelected ? Colors.white : AppColors.warning,
-                  ),
-                ],
-              ],
-            ),
-            selected: isSelected,
-            onSelected: (_) {
-              setState(() {
-                _selectedCategory = category;
-              });
+              return FilterChip(
+                label: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(category),
+                    if (isWeak) ...[
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.trending_down_rounded,
+                        size: 14,
+                        color: isSelected ? Colors.white : AppColors.warning,
+                      ),
+                    ],
+                  ],
+                ),
+                selected: isSelected,
+                onSelected: (_) {
+                  context
+                      .read<AiPracticeBloc>()
+                      .add(SelectCategory(category));
+                },
+                selectedColor: AppColors.primary,
+                checkmarkColor: Colors.white,
+                labelStyle: TextStyle(
+                  color: isSelected ? Colors.white : AppColors.textPrimary,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 13,
+                ),
+                backgroundColor: isWeak
+                    ? AppColors.warning.withValues(alpha: 0.1)
+                    : null,
+                side: BorderSide(
+                  color: isWeak && !isSelected
+                      ? AppColors.warning.withValues(alpha: 0.4)
+                      : Colors.transparent,
+                ),
+              );
             },
-            selectedColor: AppColors.primary,
-            checkmarkColor: Colors.white,
-            labelStyle: TextStyle(
-              color: isSelected ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
-              fontSize: 13,
-            ),
-            backgroundColor: isWeak
-                ? AppColors.warning.withValues(alpha: 0.1)
-                : null,
-            side: BorderSide(
-              color: isWeak && !isSelected
-                  ? AppColors.warning.withValues(alpha: 0.4)
-                  : Colors.transparent,
-            ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
@@ -154,7 +155,11 @@ class _AiPracticeScreenState extends State<AiPracticeScreen> {
             ),
             const SizedBox(height: AppSpacing.lg),
             ElevatedButton.icon(
-              onPressed: _generateQuestion,
+              onPressed: () {
+                context
+                    .read<AiPracticeBloc>()
+                    .add(const GenerateQuestion());
+              },
               icon: const Icon(Icons.auto_awesome_rounded),
               label: const Text('Generate Question'),
             ),
@@ -164,7 +169,7 @@ class _AiPracticeScreenState extends State<AiPracticeScreen> {
     );
   }
 
-  Widget _buildQuestionView() {
+  Widget _buildQuestionView(BuildContext context, AiPracticeLoaded state) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
@@ -180,7 +185,7 @@ class _AiPracticeScreenState extends State<AiPracticeScreen> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              _selectedCategory,
+              state.selectedCategory,
               style: const TextStyle(
                 color: AppColors.primary,
                 fontSize: 12,
@@ -190,16 +195,15 @@ class _AiPracticeScreenState extends State<AiPracticeScreen> {
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            _question!,
+            state.question,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   height: 1.4,
                 ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          ...List.generate(_options.length, (index) {
-            final label = String.fromCharCode(65 + index); // A, B, C, D
-            // Strip "A. " prefix if present
-            var optionText = _options[index];
+          ...List.generate(state.options.length, (index) {
+            final label = String.fromCharCode(65 + index);
+            var optionText = state.options[index];
             if (optionText.length > 3 &&
                 optionText[1] == '.' &&
                 optionText[2] == ' ') {
@@ -207,14 +211,14 @@ class _AiPracticeScreenState extends State<AiPracticeScreen> {
             }
 
             AnswerState answerState;
-            if (!_answered) {
-              answerState = _selectedIndex == index
+            if (!state.answered) {
+              answerState = state.selectedAnswer == index
                   ? AnswerState.selected
                   : AnswerState.idle;
             } else {
-              if (index == _correctIndex) {
+              if (index == state.correctIndex) {
                 answerState = AnswerState.correct;
-              } else if (index == _selectedIndex) {
+              } else if (index == state.selectedAnswer) {
                 answerState = AnswerState.wrong;
               } else {
                 answerState = AnswerState.idle;
@@ -225,10 +229,16 @@ class _AiPracticeScreenState extends State<AiPracticeScreen> {
               label: label,
               text: optionText,
               state: answerState,
-              onTap: _answered ? null : () => _onSelectAnswer(index),
+              onTap: state.answered
+                  ? null
+                  : () {
+                      context
+                          .read<AiPracticeBloc>()
+                          .add(SelectAnswer(index));
+                    },
             );
           }),
-          if (_answered && _explanation != null) ...[
+          if (state.answered && state.explanation != null) ...[
             const SizedBox(height: AppSpacing.md),
             Container(
               width: double.infinity,
@@ -259,7 +269,7 @@ class _AiPracticeScreenState extends State<AiPracticeScreen> {
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
-                    _explanation!,
+                    state.explanation!,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           height: 1.5,
                         ),
@@ -271,24 +281,13 @@ class _AiPracticeScreenState extends State<AiPracticeScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: _generateQuestion,
+                onPressed: () {
+                  context
+                      .read<AiPracticeBloc>()
+                      .add(const GenerateQuestion());
+                },
                 icon: const Icon(Icons.auto_awesome_rounded),
                 label: const Text('Next Question'),
-              ),
-            ),
-          ],
-          if (_errorMessage != null) ...[
-            const SizedBox(height: AppSpacing.md),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: AppColors.error.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                _errorMessage!,
-                style: const TextStyle(color: AppColors.error),
               ),
             ),
           ],
@@ -297,72 +296,39 @@ class _AiPracticeScreenState extends State<AiPracticeScreen> {
     );
   }
 
-  void _onSelectAnswer(int index) {
-    setState(() {
-      if (_answered) return;
-      _selectedIndex = index;
-      _answered = true;
-    });
-  }
-
-  Future<void> _generateQuestion() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-      _question = null;
-      _options = [];
-      _correctIndex = null;
-      _explanation = null;
-      _selectedIndex = null;
-      _answered = false;
-    });
-
-    try {
-      final response = await widget.geminiService.generatePracticeQuestion(
-        category: _selectedCategory,
-        difficulty: 'medium',
-        language: 'English',
-      );
-
-      final parsed = _parseQuestionResponse(response);
-      if (parsed != null) {
-        setState(() {
-          _question = parsed['question'] as String;
-          _options = List<String>.from(parsed['options'] as List);
-          _correctIndex = parsed['correctIndex'] as int;
-          _explanation = parsed['explanation'] as String?;
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _errorMessage = 'Failed to parse question. Please try again.';
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Failed to generate question. Please try again.';
-        _isLoading = false;
-      });
-    }
-  }
-
-  Map<String, dynamic>? _parseQuestionResponse(String response) {
-    try {
-      // Try to extract JSON from the response (it might be wrapped in markdown)
-      var jsonStr = response;
-      final jsonMatch = RegExp(r'\{[\s\S]*\}').firstMatch(response);
-      if (jsonMatch != null) {
-        jsonStr = jsonMatch.group(0)!;
-      }
-      final decoded = json.decode(jsonStr) as Map<String, dynamic>;
-
-      if (decoded.containsKey('question') &&
-          decoded.containsKey('options') &&
-          decoded.containsKey('correctIndex')) {
-        return decoded;
-      }
-    } catch (_) {}
-    return null;
+  Widget _buildErrorState(BuildContext context, AiPracticeError state) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                state.message,
+                style: const TextStyle(color: AppColors.error),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            ElevatedButton.icon(
+              onPressed: () {
+                context
+                    .read<AiPracticeBloc>()
+                    .add(const GenerateQuestion());
+              },
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Try Again'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

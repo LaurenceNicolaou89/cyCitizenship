@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../config/theme.dart';
+import '../../../core/services/ai_rate_limit_service.dart';
 import '../../../core/services/gemini_service.dart';
 import '../bloc/ai_tutor_bloc.dart';
 import '../bloc/ai_tutor_event.dart';
@@ -17,7 +18,8 @@ class AiTutorScreen extends StatelessWidget {
     return BlocProvider(
       create: (context) => AiTutorBloc(
         geminiService: context.read<GeminiService>(),
-      ),
+        rateLimitService: context.read<AiRateLimitService>(),
+      )..add(const LoadRateLimits()),
       child: const _AiTutorView(),
     );
   }

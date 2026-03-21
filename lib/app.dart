@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'config/theme.dart';
 import 'config/routes.dart';
+import 'core/services/ai_rate_limit_service.dart';
 import 'core/services/auth_service.dart';
 import 'core/services/firestore_service.dart';
 import 'core/services/gemini_service.dart';
@@ -17,9 +19,14 @@ import 'features/home/bloc/home_bloc.dart';
 import 'features/home/bloc/home_event.dart';
 
 class CyCitizenshipApp extends StatelessWidget {
-  const CyCitizenshipApp({super.key, required this.onboardingComplete});
+  const CyCitizenshipApp({
+    super.key,
+    required this.onboardingComplete,
+    required this.prefs,
+  });
 
   final bool onboardingComplete;
+  final SharedPreferences prefs;
 
   static const _geminiApiKey = String.fromEnvironment(
     'GEMINI_API_KEY',
@@ -48,6 +55,7 @@ class CyCitizenshipApp extends StatelessWidget {
           create: (_) => BillingService()..initialize(),
         ),
         RepositoryProvider(create: (_) => AnalyticsService()),
+        RepositoryProvider(create: (_) => AiRateLimitService(prefs)),
       ],
       child: MultiBlocProvider(
         providers: [
