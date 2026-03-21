@@ -1,26 +1,33 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class FirestoreService {
+import 'i_firestore_service.dart';
+
+class FirestoreService implements IFirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   // Users
+  @override
   Future<void> createUser(String userId, Map<String, dynamic> data) async {
     await _db.collection('users').doc(userId).set(data, SetOptions(merge: true));
   }
 
+  @override
   Future<DocumentSnapshot> getUser(String userId) async {
     return await _db.collection('users').doc(userId).get();
   }
 
+  @override
   Future<void> updateUser(String userId, Map<String, dynamic> data) async {
     await _db.collection('users').doc(userId).update(data);
   }
 
+  @override
   Stream<DocumentSnapshot> userStream(String userId) {
     return _db.collection('users').doc(userId).snapshots();
   }
 
   // Questions
+  @override
   Future<QuerySnapshot> getQuestions({
     String? category,
     int? limit,
@@ -35,11 +42,13 @@ class FirestoreService {
     return await query.get();
   }
 
+  @override
   Stream<QuerySnapshot> questionsStream() {
     return _db.collection('questions').snapshots();
   }
 
   // User Progress
+  @override
   Future<void> saveAnswer(String userId, Map<String, dynamic> answer) async {
     await _db
         .collection('user_progress')
@@ -48,6 +57,7 @@ class FirestoreService {
         .add(answer);
   }
 
+  @override
   Future<void> saveMockExam(String userId, Map<String, dynamic> exam) async {
     await _db
         .collection('user_progress')
@@ -56,6 +66,7 @@ class FirestoreService {
         .add(exam);
   }
 
+  @override
   Future<QuerySnapshot> getMockExams(String userId) async {
     return await _db
         .collection('user_progress')
@@ -65,6 +76,7 @@ class FirestoreService {
         .get();
   }
 
+  @override
   Future<void> updateCategoryStats(
     String userId,
     String category,
@@ -78,6 +90,7 @@ class FirestoreService {
         .set(stats, SetOptions(merge: true));
   }
 
+  @override
   Future<QuerySnapshot> getCategoryStats(String userId) async {
     return await _db
         .collection('user_progress')
@@ -87,6 +100,7 @@ class FirestoreService {
   }
 
   // Exam Dates
+  @override
   Future<QuerySnapshot> getExamDates() async {
     return await _db
         .collection('exam_dates')
@@ -95,11 +109,13 @@ class FirestoreService {
   }
 
   // Keep Learning Courses
+  @override
   Future<QuerySnapshot> getCourses() async {
     return await _db.collection('keep_learning').doc('courses').collection('items').get();
   }
 
   // AI Conversations
+  @override
   Future<void> saveConversation(
     String userId,
     String type,

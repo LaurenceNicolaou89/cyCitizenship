@@ -1,6 +1,8 @@
 import 'package:google_generative_ai/google_generative_ai.dart';
 
-class GeminiService {
+import 'i_gemini_service.dart';
+
+class GeminiService implements IGeminiService {
   late final GenerativeModel _model;
 
   static const _tutorSystemPrompt = '''
@@ -36,6 +38,7 @@ Use daily life scenarios relevant to living in Cyprus.
     );
   }
 
+  @override
   Future<String> chatWithTutor(List<Content> history, String message) async {
     final chat = _model.startChat(
       history: [
@@ -47,6 +50,7 @@ Use daily life scenarios relevant to living in Cyprus.
     return response.text ?? 'Sorry, I could not generate a response.';
   }
 
+  @override
   Future<String> generatePracticeQuestion({
     required String category,
     required String difficulty,
@@ -61,6 +65,7 @@ Use daily life scenarios relevant to living in Cyprus.
     return response.text ?? '{}';
   }
 
+  @override
   Future<String> greekPractice(
     List<Content> history,
     String message, {

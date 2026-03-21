@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'package:in_app_purchase/in_app_purchase.dart';
-class BillingService {
+
+import 'i_billing_service.dart';
+
+class BillingService implements IBillingService {
   final InAppPurchase _iap = InAppPurchase.instance;
   StreamSubscription<List<PurchaseDetails>>? _subscription;
 
@@ -9,12 +12,16 @@ class BillingService {
   bool _available = false;
   List<ProductDetails> _products = [];
 
+  @override
   bool get isAvailable => _available;
+  @override
   List<ProductDetails> get products => _products;
 
   final _purchaseController = StreamController<PurchaseStatus>.broadcast();
+  @override
   Stream<PurchaseStatus> get purchaseStream => _purchaseController.stream;
 
+  @override
   Future<void> initialize() async {
     _available = await _iap.isAvailable();
     if (!_available) return;
@@ -55,6 +62,7 @@ class BillingService {
     }
   }
 
+  @override
   Future<void> buyPremium() async {
     if (_products.isEmpty) return;
 
@@ -66,10 +74,12 @@ class BillingService {
     await _iap.buyNonConsumable(purchaseParam: purchaseParam);
   }
 
+  @override
   Future<void> restorePurchases() async {
     await _iap.restorePurchases();
   }
 
+  @override
   void dispose() {
     _subscription?.cancel();
     _purchaseController.close();
