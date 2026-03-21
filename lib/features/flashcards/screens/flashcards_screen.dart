@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 
 import '../../../config/theme.dart';
+import '../../../core/utils/category_utils.dart';
 import '../../../shared/widgets/app_chip.dart';
 import '../bloc/flashcards_bloc.dart';
 import '../bloc/flashcards_event.dart';
@@ -33,16 +34,12 @@ class _FlashcardsViewState extends State<_FlashcardsView> {
   String? _selectedCategory;
   final CardSwiperController _swiperController = CardSwiperController();
 
-  static const _categories = [
+  static final _categories = [
     {'label': 'All', 'value': null, 'color': null},
-    {'label': 'Geography', 'value': 'geography', 'color': AppColors.geography},
-    {'label': 'Politics', 'value': 'politics', 'color': AppColors.politics},
-    {'label': 'Culture', 'value': 'culture', 'color': AppColors.culture},
-    {
-      'label': 'Daily Life',
-      'value': 'daily_life',
-      'color': AppColors.dailyLife
-    },
+    {'label': CategoryUtils.getCategoryDisplayName('geography'), 'value': 'geography', 'color': CategoryUtils.getCategoryColor('geography')},
+    {'label': CategoryUtils.getCategoryDisplayName('politics'), 'value': 'politics', 'color': CategoryUtils.getCategoryColor('politics')},
+    {'label': CategoryUtils.getCategoryDisplayName('culture'), 'value': 'culture', 'color': CategoryUtils.getCategoryColor('culture')},
+    {'label': CategoryUtils.getCategoryDisplayName('daily_life'), 'value': 'daily_life', 'color': CategoryUtils.getCategoryColor('daily_life')},
   ];
 
   @override
@@ -446,35 +443,9 @@ class _FlashcardWidget extends StatelessWidget {
     this.swipeProgress = 0,
   });
 
-  Color get _categoryColor {
-    switch (category) {
-      case 'geography':
-        return AppColors.geography;
-      case 'politics':
-        return AppColors.politics;
-      case 'culture':
-        return AppColors.culture;
-      case 'daily_life':
-        return AppColors.dailyLife;
-      default:
-        return AppColors.primary;
-    }
-  }
+  Color get _categoryColor => CategoryUtils.getCategoryColor(category);
 
-  String get _categoryLabel {
-    switch (category) {
-      case 'geography':
-        return 'Geography';
-      case 'politics':
-        return 'Politics';
-      case 'culture':
-        return 'Culture';
-      case 'daily_life':
-        return 'Daily Life';
-      default:
-        return category;
-    }
-  }
+  String get _categoryLabel => CategoryUtils.getCategoryDisplayName(category);
 
   @override
   Widget build(BuildContext context) {
