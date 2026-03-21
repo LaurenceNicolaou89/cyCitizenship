@@ -65,9 +65,27 @@ class NotificationService {
     // Foreground messages handled by app UI
   }
 
+  /// Whitelist of valid routes that push notifications may navigate to.
+  static const _allowedRoutes = <String>{
+    '/home',
+    '/practice',
+    '/ai',
+    '/info',
+    '/profile',
+    '/exam-simulator',
+    '/exam-results',
+    '/flashcards',
+    '/ai-practice',
+    '/greek-practice',
+    '/exam-map',
+    '/checklist',
+    '/keep-learning',
+    '/heatmap',
+  };
+
   void _handleMessageOpenedApp(RemoteMessage message) {
     final route = message.data['route'];
-    if (route != null && onNavigate != null) {
+    if (route != null && onNavigate != null && _allowedRoutes.contains(route)) {
       onNavigate!(route);
     }
   }
