@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 
 import '../../../config/theme.dart';
+import '../../../core/services/question_repository.dart';
 import '../../../core/utils/category_utils.dart';
 import '../../../shared/widgets/app_chip.dart';
 import '../bloc/flashcards_bloc.dart';
@@ -17,7 +18,9 @@ class FlashcardsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => FlashcardsBloc()..add(const LoadFlashcards()),
+      create: (context) => FlashcardsBloc(
+        questionRepository: context.read<QuestionRepository>(),
+      )..add(const LoadFlashcards()),
       child: const _FlashcardsView(),
     );
   }

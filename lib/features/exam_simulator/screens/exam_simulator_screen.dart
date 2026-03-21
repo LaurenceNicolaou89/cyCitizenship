@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../config/theme.dart';
 import '../../../config/constants.dart';
-import '../../../core/services/firestore_service.dart';
+import '../../../core/services/question_repository.dart';
 import '../../../shared/widgets/answer_option.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_card.dart';
@@ -20,7 +20,7 @@ class ExamSimulatorScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => ExamSimulatorBloc(
-        firestoreService: context.read<FirestoreService>(),
+        questionRepository: context.read<QuestionRepository>(),
       ),
       child: const _ExamSimulatorView(),
     );
