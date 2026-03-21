@@ -20,10 +20,35 @@ import '../features/auth/screens/login_screen.dart';
 import '../features/auth/screens/onboarding_screen.dart';
 import '../features/auth/bloc/auth_bloc.dart';
 import '../features/auth/bloc/auth_state.dart';
+import '../features/home/bloc/home_bloc.dart';
+import '../features/home/bloc/home_state.dart';
 import '../shared/widgets/app_shell.dart';
+import '../shared/widgets/paywall_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
+
+/// Routes that require a real Firebase auth (not guest).
+/// Guest users will be redirected to /login for these routes.
+const _authRequiredRoutes = {
+  '/exam-simulator',
+  '/exam-results',
+  '/flashcards',
+  '/ai-practice',
+  '/greek-practice',
+  '/checklist',
+  '/heatmap',
+  '/profile',
+};
+
+/// Routes that require a premium subscription.
+/// Free users will be redirected to /paywall for these routes.
+const _premiumOnlyRoutes = {
+  '/ai-practice',
+  '/greek-practice',
+  '/exam-simulator',
+  '/heatmap',
+};
 
 GoRouter createRouter({required bool onboardingComplete}) => GoRouter(
   navigatorKey: _rootNavigatorKey,
@@ -32,18 +57,36 @@ GoRouter createRouter({required bool onboardingComplete}) => GoRouter(
     final authState = context.read<AuthBloc>().state;
     final location = state.uri.path;
 
-    // Allow access to onboarding and login without auth
-    final isAuthRoute = location == '/onboarding' || location == '/login';
+    // Allow access to onboarding, login, and paywall without further checks
+    final isPublicRoute = location == '/onboarding' ||
+        location == '/login' ||
+        location == '/paywall';
 
     // If unauthenticated (not guest), redirect to login
-    if (authState is AuthUnauthenticated && !isAuthRoute) {
+    if (authState is AuthUnauthenticated && !isPublicRoute) {
       return '/login';
     }
 
     // If authenticated and on auth route, redirect to home
     if ((authState is AuthAuthenticated || authState is AuthGuest) &&
-        isAuthRoute) {
+        (location == '/onboarding' || location == '/login')) {
       return '/home';
+    }
+
+    // Guest users cannot access auth-required routes (Firestore calls will fail)
+    if (authState is AuthGuest && _authRequiredRoutes.contains(location)) {
+      return '/login';
+    }
+
+    // Premium route guard — only check for authenticated (non-guest) users
+    if (authState is AuthAuthenticated &&
+        _premiumOnlyRoutes.contains(location)) {
+      final homeState = context.read<HomeBloc>().state;
+      final isPremium =
+          homeState is HomeLoaded ? homeState.isPremium : false;
+      if (!isPremium) {
+        return '/paywall';
+      }
     }
 
     return null;
@@ -137,6 +180,19 @@ GoRouter createRouter({required bool onboardingComplete}) => GoRouter(
     GoRoute(
       path: '/heatmap',
       builder: (context, state) => const HeatmapScreen(),
+    ),
+    GoRoute(
+      path: '/paywall',
+      builder: (context, state) => Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.of(context).maybePop(),
+          ),
+          title: const Text('Premium'),
+        ),
+        body: const PaywallScreen(),
+      ),
     ),
   ],
 );

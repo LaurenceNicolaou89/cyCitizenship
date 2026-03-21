@@ -16,10 +16,13 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => HomeBloc()..add(const LoadHome()),
-      child: const _HomeScreenView(),
-    );
+    // Refresh home data each time the screen is shown.
+    // HomeBloc is provided at the app level for route guard access.
+    final homeBloc = context.read<HomeBloc>();
+    if (homeBloc.state is! HomeLoaded) {
+      homeBloc.add(const LoadHome());
+    }
+    return const _HomeScreenView();
   }
 }
 
