@@ -3,16 +3,16 @@ import 'package:hive/hive.dart';
 
 import '../../../config/constants.dart';
 import '../../../core/models/question_model.dart';
-import '../../../core/services/firestore_service.dart';
+import '../../../core/services/question_repository.dart';
 import 'flashcards_event.dart';
 import 'flashcards_state.dart';
 
 class FlashcardsBloc extends Bloc<FlashcardsEvent, FlashcardsState> {
-  final FirestoreService _firestoreService;
+  final QuestionRepository _questionRepository;
   static const String _boxLevelsKey = 'flashcard_box_levels';
 
-  FlashcardsBloc({FirestoreService? firestoreService})
-      : _firestoreService = firestoreService ?? FirestoreService(),
+  FlashcardsBloc({required QuestionRepository questionRepository})
+      : _questionRepository = questionRepository,
         super(const FlashcardsInitial()) {
     on<LoadFlashcards>(_onLoadFlashcards);
     on<SwipeRight>(_onSwipeRight);
@@ -52,20 +52,16 @@ class FlashcardsBloc extends Bloc<FlashcardsEvent, FlashcardsState> {
     emit(const FlashcardsLoading());
 
     try {
-      final snapshot = await _firestoreService.getQuestions(
+      final allQuestions = await _questionRepository.getQuestions(
         category: event.category,
       );
 
-      if (snapshot.docs.isEmpty) {
+      if (allQuestions.isEmpty) {
         emit(const FlashcardsError(
           'No flashcards available. Please check your internet connection.',
         ));
         return;
       }
-
-      final allQuestions = snapshot.docs
-          .map((doc) => QuestionModel.fromFirestore(doc))
-          .toList();
 
       // Load persisted box levels
       final boxLevels = _loadBoxLevels();
