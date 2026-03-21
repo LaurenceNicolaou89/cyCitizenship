@@ -55,6 +55,7 @@ pubspec.lock
 firebase-debug.log
 firestore-debug.log
 ui-debug.log
+**/GoogleService-Info.plist
 
 # Environment
 .env
