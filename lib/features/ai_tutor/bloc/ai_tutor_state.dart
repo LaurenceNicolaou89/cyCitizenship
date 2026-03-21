@@ -1,22 +1,9 @@
 import 'package:equatable/equatable.dart';
 
-class ChatMessage extends Equatable {
-  final String role;
-  final String content;
-  final DateTime timestamp;
+// Re-export ChatMessage from shared location for backward compatibility
+export '../../../core/models/chat_message.dart';
 
-  const ChatMessage({
-    required this.role,
-    required this.content,
-    required this.timestamp,
-  });
-
-  bool get isUser => role == 'user';
-  bool get isAssistant => role == 'assistant';
-
-  @override
-  List<Object?> get props => [role, content, timestamp];
-}
+import '../../../core/models/chat_message.dart';
 
 sealed class AiTutorState extends Equatable {
   const AiTutorState();
