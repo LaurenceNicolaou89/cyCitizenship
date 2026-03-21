@@ -6,6 +6,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../config/theme.dart';
 import '../../../core/models/chat_message.dart';
 import '../../../core/services/gemini_service.dart';
+import '../../../shared/widgets/chat_input_field.dart';
+import '../../../shared/widgets/chat_message_bubble.dart';
+import '../../../shared/widgets/typing_indicator.dart';
 import '../bloc/greek_practice_bloc.dart';
 import '../bloc/greek_practice_event.dart';
 import '../bloc/greek_practice_state.dart';
@@ -80,6 +83,12 @@ class _GreekPracticeViewState extends State<_GreekPracticeView> {
     };
   }
 
+  Color _aiBubbleColor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? AppColors.darkSurface
+        : const Color(0xFFF0F0F0);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -137,15 +146,33 @@ class _GreekPracticeViewState extends State<_GreekPracticeView> {
                   itemCount: messages.length + (isLoading ? 1 : 0),
                   itemBuilder: (context, index) {
                     if (index == messages.length && isLoading) {
-                      return const _TypingIndicator();
+                      return TypingIndicator(
+                        accentColor: AppColors.success,
+                        avatarIcon: Icons.translate_rounded,
+                        bubbleColor: _aiBubbleColor(context),
+                      );
                     }
-                    return _MessageBubble(message: messages[index]);
+                    final msg = messages[index];
+                    return ChatMessageBubble(
+                      text: msg.content,
+                      isUser: msg.isUser,
+                      accentColor: AppColors.success,
+                      avatarIcon: Icons.translate_rounded,
+                      aiBubbleColor: _aiBubbleColor(context),
+                    );
                   },
                 );
               },
             ),
           ),
-          _buildInputField(),
+          ChatInputField(
+            controller: _controller,
+            focusNode: _focusNode,
+            onSend: () => _sendMessage(_controller.text),
+            sendButtonColor: AppColors.success,
+            hintText: 'Type in Greek or English...',
+            fillColor: AppColors.background,
+          ),
         ],
       ),
     );
@@ -268,67 +295,6 @@ class _GreekPracticeViewState extends State<_GreekPracticeView> {
     );
   }
 
-  Widget _buildInputField() {
-    return Container(
-      padding: EdgeInsets.only(
-        left: AppSpacing.md,
-        right: AppSpacing.sm,
-        top: AppSpacing.sm,
-        bottom: MediaQuery.of(context).padding.bottom + AppSpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _controller,
-              focusNode: _focusNode,
-              decoration: InputDecoration(
-                hintText: 'Type in Greek or English...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide.none,
-                ),
-                filled: true,
-                fillColor: AppColors.background,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.sm,
-                ),
-              ),
-              maxLines: null,
-              textInputAction: TextInputAction.send,
-              onSubmitted: (text) => _sendMessage(text),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Material(
-            color: AppColors.success,
-            borderRadius: BorderRadius.circular(24),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(24),
-              onTap: () => _sendMessage(_controller.text),
-              child: const Padding(
-                padding: EdgeInsets.all(10),
-                child: Icon(
-                  Icons.send_rounded,
-                  color: Colors.white,
-                  size: 22,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -381,192 +347,11 @@ class _LevelButton extends StatelessWidget {
               subtitle,
               style: TextStyle(
                 fontSize: 10,
-                color:
-                    isSelected ? AppColors.success : AppColors.textSecondary,
+                color: isSelected ? AppColors.success : AppColors.textSecondary,
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _MessageBubble extends StatelessWidget {
-  final ChatMessage message;
-
-  const _MessageBubble({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    final isUser = message.isUser;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: Row(
-        mainAxisAlignment:
-            isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (!isUser)
-            Container(
-              margin: const EdgeInsets.only(right: AppSpacing.sm),
-              width: 32,
-              height: 32,
-              decoration: const BoxDecoration(
-                color: AppColors.success,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.translate_rounded,
-                color: Colors.white,
-                size: 18,
-              ),
-            ),
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm + 2,
-              ),
-              decoration: BoxDecoration(
-                color: isUser
-                    ? AppColors.primary
-                    : Theme.of(context).brightness == Brightness.dark
-                        ? AppColors.darkSurface
-                        : const Color(0xFFF0F0F0),
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(16),
-                  topRight: const Radius.circular(16),
-                  bottomLeft: Radius.circular(isUser ? 16 : 4),
-                  bottomRight: Radius.circular(isUser ? 4 : 16),
-                ),
-              ),
-              child: SelectableText(
-                message.content,
-                style: TextStyle(
-                  fontSize: 15,
-                  color: isUser
-                      ? Colors.white
-                      : Theme.of(context).colorScheme.onSurface,
-                  height: 1.4,
-                ),
-              ),
-            ),
-          ),
-          if (isUser) const SizedBox(width: 40),
-        ],
-      ),
-    );
-  }
-}
-
-class _TypingIndicator extends StatefulWidget {
-  const _TypingIndicator();
-
-  @override
-  State<_TypingIndicator> createState() => _TypingIndicatorState();
-}
-
-class _TypingIndicatorState extends State<_TypingIndicator>
-    with TickerProviderStateMixin {
-  late final List<AnimationController> _controllers;
-  late final List<Animation<double>> _animations;
-
-  @override
-  void initState() {
-    super.initState();
-    _controllers = List.generate(
-      3,
-      (i) => AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 600),
-      ),
-    );
-    _animations = _controllers.map((c) {
-      return Tween<double>(begin: 0, end: -8).animate(
-        CurvedAnimation(parent: c, curve: Curves.easeInOut),
-      );
-    }).toList();
-
-    for (var i = 0; i < 3; i++) {
-      Future.delayed(Duration(milliseconds: i * 200), () {
-        if (mounted) _controllers[i].repeat(reverse: true);
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    for (final c in _controllers) {
-      c.dispose();
-    }
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            margin: const EdgeInsets.only(right: AppSpacing.sm),
-            width: 32,
-            height: 32,
-            decoration: const BoxDecoration(
-              color: AppColors.success,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.translate_rounded,
-              color: Colors.white,
-              size: 18,
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.sm + 4,
-            ),
-            decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? AppColors.darkSurface
-                  : const Color(0xFFF0F0F0),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
-                bottomLeft: Radius.circular(4),
-                bottomRight: Radius.circular(16),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: List.generate(3, (i) {
-                return AnimatedBuilder(
-                  animation: _animations[i],
-                  builder: (context, child) {
-                    return Transform.translate(
-                      offset: Offset(0, _animations[i].value),
-                      child: child,
-                    );
-                  },
-                  child: Container(
-                    margin: EdgeInsets.only(left: i > 0 ? 4 : 0),
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: AppColors.textSecondary.withValues(alpha: 0.5),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                );
-              }),
-            ),
-          ),
-        ],
       ),
     );
   }
