@@ -69,6 +69,12 @@ class BillingService implements IBillingService {
     _products = response.productDetails;
   }
 
+  /// Handles purchase lifecycle updates from the App Store / Play Store.
+  ///
+  /// Business rule: restored purchases are treated identically to new
+  /// purchases -- both grant premium access and emit [PurchaseStatus.purchased].
+  /// This ensures users who reinstall the app or switch devices automatically
+  /// regain their paid tier without re-purchasing.
   void _handlePurchaseUpdate(List<PurchaseDetails> purchases) {
     for (final purchase in purchases) {
       switch (purchase.status) {
@@ -85,6 +91,7 @@ class BillingService implements IBillingService {
     }
   }
 
+<<<<<<< HEAD
   /// Verify the purchase server-side before granting premium access.
   ///
   /// Calls the `verifyPurchase` Cloud Function which validates the receipt
@@ -135,6 +142,12 @@ class BillingService implements IBillingService {
     }
   }
 
+  /// Initiates a non-consumable purchase for the premium tier (one-time).
+  ///
+  /// Uses [buyNonConsumable] because premium is a lifetime unlock -- the user
+  /// pays once and keeps access forever, including across reinstalls via
+  /// restore. If no products are loaded (e.g. store unavailable), this is a
+  /// no-op.
   @override
   Future<void> buyPremium() async {
     if (_products.isEmpty) return;

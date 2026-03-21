@@ -11,8 +11,11 @@ class QuestionRepository {
   /// In-memory cache to avoid repeated Hive deserialization (CYC-085).
   List<QuestionModel>? _cachedQuestions;
 
+  /// No-op -- the 'questions' box is already opened in main.dart.
+  /// Kept for interface compatibility; callers may still call initialize().
   Future<void> initialize() async {
-    await Hive.openBox(_boxName);
+    // Box is opened in main.dart via Hive.openBox('questions').
+    // Using Hive.box() directly everywhere to avoid redundant opens.
   }
 
   Future<List<QuestionModel>> getQuestions({String? category}) async {
@@ -106,7 +109,7 @@ class QuestionRepository {
       // Invalidate in-memory cache so next read picks up new data (CYC-085).
       _cachedQuestions = null;
     } catch (_) {
-      // Silently fail — will use cached data
+      // Silently fail -- will use cached data
     }
   }
 
