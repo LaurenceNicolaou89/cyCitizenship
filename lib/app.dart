@@ -13,6 +13,8 @@ import 'core/services/billing_service.dart';
 import 'core/services/analytics_service.dart';
 import 'features/auth/bloc/auth_bloc.dart';
 import 'features/auth/bloc/auth_event.dart';
+import 'features/home/bloc/home_bloc.dart';
+import 'features/home/bloc/home_event.dart';
 
 class CyCitizenshipApp extends StatelessWidget {
   const CyCitizenshipApp({super.key, required this.onboardingComplete});
@@ -47,11 +49,18 @@ class CyCitizenshipApp extends StatelessWidget {
         ),
         RepositoryProvider(create: (_) => AnalyticsService()),
       ],
-      child: BlocProvider(
-        create: (context) => AuthBloc(
-          authService: context.read<AuthService>(),
-          firestoreService: context.read<FirestoreService>(),
-        )..add(AuthCheckRequested()),
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (context) => AuthBloc(
+              authService: context.read<AuthService>(),
+              firestoreService: context.read<FirestoreService>(),
+            )..add(AuthCheckRequested()),
+          ),
+          BlocProvider(
+            create: (_) => HomeBloc()..add(const LoadHome()),
+          ),
+        ],
         child: MaterialApp.router(
           title: 'CyCitizenship',
           debugShowCheckedModeBanner: false,
