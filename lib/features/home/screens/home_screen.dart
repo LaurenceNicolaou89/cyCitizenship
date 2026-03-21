@@ -42,7 +42,12 @@ class _HomeScreenView extends StatelessWidget {
             icon: const Icon(Icons.notifications_outlined),
             tooltip: 'Notifications',
             onPressed: () {
-              // TODO: Navigate to notifications
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Notifications coming soon'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
             },
           ),
         ],
@@ -224,7 +229,7 @@ class _DailyQuestionCard extends StatelessWidget {
 
     return AppCard(
       onTap: () {
-        // TODO: Wire to daily question flow
+        context.push('/ai-practice');
       },
       child: Row(
         children: [

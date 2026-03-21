@@ -1,52 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../config/theme.dart';
 import '../../../core/models/exam_date_model.dart';
+import '../../../core/services/firestore_service.dart';
 import '../../../shared/widgets/app_card.dart';
+import '../bloc/exam_info_bloc.dart';
+import '../bloc/exam_info_event.dart';
+import '../bloc/exam_info_state.dart';
 
-class ExamInfoScreen extends StatefulWidget {
+class ExamInfoScreen extends StatelessWidget {
   const ExamInfoScreen({super.key});
 
   @override
-  State<ExamInfoScreen> createState() => _ExamInfoScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => ExamInfoBloc(firestoreService: FirestoreService())
+        ..add(const LoadExamDates()),
+      child: const _ExamInfoScreenView(),
+    );
+  }
 }
 
-class _ExamInfoScreenState extends State<ExamInfoScreen>
+class _ExamInfoScreenView extends StatefulWidget {
+  const _ExamInfoScreenView();
+
+  @override
+  State<_ExamInfoScreenView> createState() => _ExamInfoScreenViewState();
+}
+
+class _ExamInfoScreenViewState extends State<_ExamInfoScreenView>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-
-  // Placeholder exam dates
-  final List<ExamDateModel> _examDates = [
-    ExamDateModel(
-      id: 'feb_2026',
-      date: DateTime(2026, 2, 14),
-      registrationOpen: DateTime(2025, 11, 1),
-      registrationClose: DateTime(2026, 1, 15),
-      centers: [],
-      year: 2026,
-      session: 'February',
-    ),
-    ExamDateModel(
-      id: 'jul_2026',
-      date: DateTime(2026, 7, 11),
-      registrationOpen: DateTime(2026, 4, 1),
-      registrationClose: DateTime(2026, 6, 15),
-      centers: [],
-      year: 2026,
-      session: 'July',
-    ),
-    ExamDateModel(
-      id: 'feb_2027',
-      date: DateTime(2027, 2, 13),
-      registrationOpen: DateTime(2026, 11, 1),
-      registrationClose: DateTime(2027, 1, 15),
-      centers: [],
-      year: 2027,
-      session: 'February',
-    ),
-  ];
 
   @override
   void initState() {
@@ -91,9 +78,52 @@ class _ExamInfoScreenState extends State<ExamInfoScreen>
   }
 
   Widget _buildExamDatesTab(BuildContext context) {
+    return BlocBuilder<ExamInfoBloc, ExamInfoState>(
+      builder: (context, state) {
+        if (state is ExamInfoLoading || state is ExamInfoInitial) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (state is ExamInfoError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Failed to load exam dates',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                TextButton.icon(
+                  onPressed: () => context
+                      .read<ExamInfoBloc>()
+                      .add(const LoadExamDates()),
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Retry'),
+                ),
+              ],
+            ),
+          );
+        }
+
+        if (state is ExamInfoLoaded) {
+          return _buildExamDatesContent(context, state.examDates);
+        }
+
+        return const SizedBox.shrink();
+      },
+    );
+  }
+
+  Widget _buildExamDatesContent(
+    BuildContext context,
+    List<ExamDateModel> examDates,
+  ) {
     final theme = Theme.of(context);
     final upcomingExams =
-        _examDates.where((e) => e.isUpcoming).toList()
+        examDates.where((e) => e.isUpcoming).toList()
           ..sort((a, b) => a.date.compareTo(b.date));
 
     final nextExam = upcomingExams.isNotEmpty ? upcomingExams.first : null;
@@ -146,20 +176,33 @@ class _ExamInfoScreenState extends State<ExamInfoScreen>
         ),
         const SizedBox(height: AppSpacing.sm),
 
-        ...upcomingExams.map((exam) => Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: _buildExamDateCard(context, exam),
-            )),
+        if (upcomingExams.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+            child: Center(
+              child: Text(
+                'No upcoming exam dates available',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+          )
+        else
+          ...upcomingExams.map((exam) => Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                child: _buildExamDateCard(context, exam),
+              )),
 
         // Past exams header
-        if (_examDates.any((e) => !e.isUpcoming)) ...[
+        if (examDates.any((e) => !e.isUpcoming)) ...[
           const SizedBox(height: AppSpacing.md),
           Text(
             'Past Exams',
             style: theme.textTheme.titleMedium,
           ),
           const SizedBox(height: AppSpacing.sm),
-          ..._examDates
+          ...examDates
               .where((e) => !e.isUpcoming)
               .map((exam) => Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.sm),

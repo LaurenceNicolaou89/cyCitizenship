@@ -8,6 +8,7 @@ import '../../../core/services/ai_rate_limit_service.dart';
 import '../../../core/services/gemini_service.dart';
 import '../../../shared/widgets/chat_input_field.dart';
 import '../../../shared/widgets/chat_message_bubble.dart';
+import '../../../shared/widgets/paywall_screen.dart';
 import '../../../shared/widgets/typing_indicator.dart';
 import '../bloc/ai_tutor_bloc.dart';
 import '../bloc/ai_tutor_event.dart';
@@ -291,7 +292,7 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                // TODO: Navigate to subscription screen
+                PaywallScreen.show(context);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.secondary,
