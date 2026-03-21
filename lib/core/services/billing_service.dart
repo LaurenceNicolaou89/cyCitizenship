@@ -1,7 +1,18 @@
 import 'dart:async';
+import 'dart:io';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+
+/// Result of a purchase verification attempt.
+enum VerificationResult {
+  success,
+  alreadyVerified,
+  failed,
+}
+
 class BillingService {
   final InAppPurchase _iap = InAppPurchase.instance;
+  final FirebaseFunctions _functions = FirebaseFunctions.instance;
   StreamSubscription<List<PurchaseDetails>>? _subscription;
 
   static const String premiumProductId = 'cy_citizenship_premium';
@@ -14,6 +25,10 @@ class BillingService {
 
   final _purchaseController = StreamController<PurchaseStatus>.broadcast();
   Stream<PurchaseStatus> get purchaseStream => _purchaseController.stream;
+
+  /// Human-readable error message from the last failed verification.
+  String? _lastVerificationError;
+  String? get lastVerificationError => _lastVerificationError;
 
   Future<void> initialize() async {
     _available = await _iap.isAvailable();
@@ -43,8 +58,7 @@ class BillingService {
       switch (purchase.status) {
         case PurchaseStatus.purchased:
         case PurchaseStatus.restored:
-          _purchaseController.add(PurchaseStatus.purchased);
-          _iap.completePurchase(purchase);
+          _verifyAndCompletePurchase(purchase);
         case PurchaseStatus.error:
           _purchaseController.add(PurchaseStatus.error);
         case PurchaseStatus.pending:
@@ -52,6 +66,56 @@ class BillingService {
         case PurchaseStatus.canceled:
           _purchaseController.add(PurchaseStatus.canceled);
       }
+    }
+  }
+
+  /// Verify the purchase server-side before granting premium access.
+  ///
+  /// Calls the `verifyPurchase` Cloud Function which validates the receipt
+  /// with Google Play / App Store, then updates the user's Firestore document.
+  /// Only emits [PurchaseStatus.purchased] after successful server verification.
+  Future<void> _verifyAndCompletePurchase(PurchaseDetails purchase) async {
+    _lastVerificationError = null;
+
+    try {
+      // Determine the purchase token based on platform
+      final String purchaseToken;
+      if (Platform.isAndroid) {
+        // Android: use purchaseID or serverVerificationData
+        purchaseToken =
+            purchase.verificationData.serverVerificationData;
+      } else {
+        // iOS: use the transaction ID for App Store Server API v2
+        purchaseToken =
+            purchase.purchaseID ?? purchase.verificationData.serverVerificationData;
+      }
+
+      final platform = Platform.isAndroid ? 'android' : 'ios';
+
+      final result = await _functions.httpsCallable('verifyPurchase').call({
+        'purchaseToken': purchaseToken,
+        'productId': purchase.productID,
+        'platform': platform,
+      });
+
+      final data = result.data as Map<String, dynamic>;
+
+      if (data['success'] == true) {
+        // Server verified the purchase — now complete it with the store
+        await _iap.completePurchase(purchase);
+        _purchaseController.add(PurchaseStatus.purchased);
+      } else {
+        _lastVerificationError =
+            data['message'] as String? ?? 'Verification failed.';
+        _purchaseController.add(PurchaseStatus.error);
+      }
+    } on FirebaseFunctionsException catch (e) {
+      _lastVerificationError = e.message ?? 'Purchase verification failed.';
+      _purchaseController.add(PurchaseStatus.error);
+    } catch (e) {
+      _lastVerificationError =
+          'Unable to verify purchase. Please check your connection and try again.';
+      _purchaseController.add(PurchaseStatus.error);
     }
   }
 
