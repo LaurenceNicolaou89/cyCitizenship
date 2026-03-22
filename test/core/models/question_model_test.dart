@@ -97,16 +97,16 @@ void main() {
       const q2 = QuestionModel(
         id: '1',
         textEn: 'Q',
-        textRu: 'Q2',
-        textEl: 'Q2',
+        textRu: 'Q1',
+        textEl: 'Q1',
         options: [],
-        correctIndex: 1,
+        correctIndex: 0,
         category: 'geography',
         difficulty: 'easy',
         explanation: {},
-        source: 'other',
+        source: 'test',
       );
-      // Same id, textEn, category, difficulty => equal
+      // All fields match => equal
       expect(q1, equals(q2));
     });
   });

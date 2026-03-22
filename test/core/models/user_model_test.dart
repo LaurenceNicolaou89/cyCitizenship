@@ -91,8 +91,9 @@ void main() {
     });
 
     test('equatable works on id and key fields', () {
-      final user1 = UserModel.newUser(id: 'uid123', email: 'a@a.com');
-      final user2 = UserModel.newUser(id: 'uid123', email: 'a@a.com');
+      final now = DateTime.now();
+      final user1 = UserModel(id: 'uid123', email: 'a@a.com', displayName: '', language: 'en', isPremium: false, createdAt: now, streak: 0, badges: const [], examTarget: 'general', checklist: const {});
+      final user2 = UserModel(id: 'uid123', email: 'a@a.com', displayName: '', language: 'en', isPremium: false, createdAt: now, streak: 0, badges: const [], examTarget: 'general', checklist: const {});
       expect(user1, equals(user2));
     });
 
