@@ -5,7 +5,7 @@ import 'i_auth_service.dart';
 
 class AuthService implements IAuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
 
   @override
   User? get currentUser => _auth.currentUser;
@@ -32,12 +32,9 @@ class AuthService implements IAuthService {
 
   @override
   Future<UserCredential?> signInWithGoogle() async {
-    final googleUser = await _googleSignIn.signIn();
-    if (googleUser == null) return null;
-
-    final googleAuth = await googleUser.authentication;
+    final googleUser = await _googleSignIn.authenticate();
+    final googleAuth = googleUser.authentication;
     final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
       idToken: googleAuth.idToken,
     );
 
@@ -51,7 +48,6 @@ class AuthService implements IAuthService {
 
   @override
   Future<void> signOut() async {
-    await _googleSignIn.signOut();
     await _auth.signOut();
   }
 }
