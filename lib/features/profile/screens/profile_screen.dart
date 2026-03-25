@@ -40,7 +40,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // Loading flag
   bool _isLoading = true;
 
-  // Badge definitions — unlocked status computed from user model
+  // TODO(CYC-095): wire to real data — badge definitions (IDs, labels, icons)
+  // should be driven by a config document in Firestore or a shared constants
+  // file so new badges can be added without a client release.
   static const _badgeDefinitions = [
     _BadgeDef('first_quiz', 'First Quiz', Icons.emoji_events),
     _BadgeDef('7_day_streak', '7-Day Streak', Icons.local_fire_department),
@@ -302,6 +304,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       trailing: DropdownButton<String>(
                         value: _selectedLanguage,
                         underline: const SizedBox.shrink(),
+                        // TODO(CYC-095): wire to real data — supported locales
+                        // should come from a shared app-level constant or
+                        // l10n config rather than being hardcoded here.
                         items: const [
                           DropdownMenuItem(
                               value: 'English', child: Text('English')),

@@ -10,6 +10,12 @@ class GreekPracticeBloc
   final GeminiService _geminiService;
   final bool isPremium;
 
+  /// Maximum messages retained in the UI list.
+  static const int _maxMessages = 100;
+
+  /// Sliding window size sent to the backend to limit token usage.
+  static const int _geminiWindowSize = 20;
+
   List<ChatMessage> _messages = [];
   String _level = 'B1';
   int _messagesUsedToday = 0;
@@ -68,17 +74,22 @@ class GreekPracticeBloc
     ));
 
     try {
-      // Build history from all messages except the last user message
-      final history = _messages.length > 1
-          ? _messages
-              .sublist(0, _messages.length - 1)
-              .map((m) => ChatMessage(
-                    role: m.isUser ? 'user' : 'model',
-                    content: m.content,
-                    timestamp: m.timestamp,
-                  ))
-              .toList()
+      // Build history using a sliding window to limit token usage.
+      // Exclude the last user message (sent separately by greekPractice).
+      final allExceptLast = _messages.length > 1
+          ? _messages.sublist(0, _messages.length - 1)
           : <ChatMessage>[];
+      final windowStart = allExceptLast.length > _geminiWindowSize
+          ? allExceptLast.length - _geminiWindowSize
+          : 0;
+      final history = allExceptLast
+          .sublist(windowStart)
+          .map((m) => ChatMessage(
+                role: m.isUser ? 'user' : 'model',
+                content: m.content,
+                timestamp: m.timestamp,
+              ))
+          .toList();
 
       final response = await _geminiService.greekPractice(
         history,
@@ -92,6 +103,7 @@ class GreekPracticeBloc
         timestamp: DateTime.now(),
       );
       _messages = [..._messages, assistantMessage];
+      _trimMessages();
       _messagesUsedToday++;
 
       emit(GreekPracticeLoaded(
@@ -135,5 +147,12 @@ class GreekPracticeBloc
   ) async {
     _messages = [];
     emit(GreekPracticeInitial(level: _level));
+  }
+
+  /// Trims the message list to [_maxMessages], dropping the oldest entries.
+  void _trimMessages() {
+    if (_messages.length > _maxMessages) {
+      _messages = _messages.sublist(_messages.length - _maxMessages);
+    }
   }
 }
