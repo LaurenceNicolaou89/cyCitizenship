@@ -314,10 +314,10 @@
 | CYC-084 | Use QuestionRepository in ExamSimulator + Flashcards BLoCs (batch queries) | Backend Dev | pending | P1 |
 | CYC-085 | Add in-memory cache to QuestionRepository | Backend Dev | pending | P1 |
 | CYC-086 | Batch Hive writes in QuestionRepository sync (putAll) | Backend Dev | pending | P1 |
-| CYC-087 | Debounce flashcard box level saves | Backend Dev | pending | P2 |
+| CYC-087 | Debounce flashcard box level saves | Backend Dev | done | P2 |
 | CYC-088 | Move HomeBloc to ShellRoute level (persist across tab switches) | Frontend Dev | pending | P1 |
 | CYC-089 | Move AiTutorBloc to ShellRoute level (preserve conversation) | Frontend Dev | pending | P1 |
-| CYC-090 | Lazy-init services in app.dart (remove eager ..initialize()) | Backend Dev | pending | P2 |
+| CYC-090 | Lazy-init services in app.dart (remove eager ..initialize()) | Backend Dev | done | P2 |
 
 ### Acceptance Criteria
 - **CYC-084**: Both BLoCs use QuestionRepository.getQuestions(). Exam start = 1 cached read + client-side sampling. Flashcards same.
@@ -334,7 +334,7 @@
 | ID | Title | Agent | Status | Priority |
 |----|-------|-------|--------|----------|
 | CYC-078 | Fix fire-and-forget Timers in chat screens | Frontend Dev | pending | P1 |
-| CYC-079 | Cap unbounded message lists in AI chat screens | Backend Dev | pending | P2 |
+| CYC-079 | Cap unbounded message lists in AI chat screens | Backend Dev | done | P2 |
 
 ### Acceptance Criteria
 - **CYC-078**: Timers stored in fields and cancelled in dispose(). Mounted/hasClients guard in callbacks.
@@ -348,8 +348,8 @@
 | CYC-091 | Wire HeatmapScreen to real category stats with BLoC | Frontend Dev | pending | P1 |
 | CYC-092 | Wire ProfileScreen stats + settings to real data | Frontend Dev | pending | P1 |
 | CYC-093 | Wire ExamInfoScreen to Firestore exam dates | Frontend Dev | pending | P1 |
-| CYC-094 | Create abstract service interfaces for testability | Backend Dev | pending | P2 |
-| CYC-095 | Add TODO markers to all unmarked placeholder data | Frontend Dev | pending | P2 |
+| CYC-094 | Create abstract service interfaces for testability | Backend Dev | done | P2 |
+| CYC-095 | Add TODO markers to all unmarked placeholder data | Frontend Dev | done | P2 |
 
 ### Acceptance Criteria
 - **CYC-091**: HeatmapBloc fetches from FirestoreService.getCategoryStats(). Real percentages, trends. No hardcoded data.
@@ -368,7 +368,7 @@
 | CYC-098 | Add orElse guard to BillingService.buyPremium() | Backend Dev | pending | P1 |
 | CYC-099 | Fix hardcoded locale 'en' — read user's selected language | Frontend Dev | pending | P1 |
 | CYC-100 | Widget optimizations (const constructors, narrow BlocBuilders, cached SharedPreferences) | Frontend Dev | pending | P2 |
-| CYC-101 | Use Gemini systemInstruction parameter + cache ChatSession | Backend Dev | pending | P2 |
+| CYC-101 | Use Gemini systemInstruction parameter + cache ChatSession | Backend Dev | done | P2 |
 | CYC-102 | Code quality cleanup (extract Hive helper, deduplicate checklist, fix magic numbers, add comments) | Backend Dev | pending | P2 |
 | CYC-103 | Production hardening (gate debug prints, sanitize error messages, fix email validation, gitignore) | Backend Dev | pending | P2 |
 
