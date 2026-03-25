@@ -431,6 +431,9 @@ class _ExamInfoScreenViewState extends State<_ExamInfoScreenView>
           style: theme.textTheme.titleMedium,
         ),
         const SizedBox(height: AppSpacing.sm),
+        // TODO(CYC-095): wire to real data — link rows below are placeholder
+        // entries with no URLs or onTap handlers; wire to real Ministry of
+        // Interior URLs (url_launcher) fetched from Firestore remote config.
         AppCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

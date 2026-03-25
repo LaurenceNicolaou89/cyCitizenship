@@ -17,7 +17,7 @@ class AiTutorBloc extends Bloc<AiTutorEvent, AiTutorState> {
   static const int _maxMessages = 100;
 
   /// Sliding window size sent to the backend to limit token usage.
-  static const int _geminiWindowSize = 50;
+  static const int _geminiWindowSize = 20;
 
   List<AiTutorChatMessage> _messages = [];
   int _messagesUsedToday = 0;

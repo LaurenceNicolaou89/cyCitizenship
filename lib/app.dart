@@ -33,26 +33,6 @@ class CyCitizenshipApp extends StatefulWidget {
 }
 
 class _CyCitizenshipAppState extends State<CyCitizenshipApp> {
-  late final ProgressSyncService _progressSyncService;
-  late final NotificationService _notificationService;
-  late final BillingService _billingService;
-
-  @override
-  void initState() {
-    super.initState();
-    _progressSyncService = ProgressSyncService()..initialize();
-    _notificationService = NotificationService()..initialize();
-    _billingService = BillingService()..initialize();
-  }
-
-  @override
-  void dispose() {
-    _progressSyncService.dispose();
-    _notificationService.dispose();
-    _billingService.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return MultiRepositoryProvider(
@@ -63,9 +43,17 @@ class _CyCitizenshipAppState extends State<CyCitizenshipApp> {
         RepositoryProvider(
           create: (_) => QuestionRepository()..initialize(),
         ),
-        RepositoryProvider.value(value: _progressSyncService),
-        RepositoryProvider.value(value: _notificationService),
-        RepositoryProvider.value(value: _billingService),
+        // CYC-090: moved from initState — RepositoryProvider calls dispose()
+        // automatically when the widget tree is removed, so no manual dispose needed.
+        RepositoryProvider(
+          create: (_) => ProgressSyncService()..initialize(),
+        ),
+        RepositoryProvider(
+          create: (_) => NotificationService()..initialize(),
+        ),
+        RepositoryProvider(
+          create: (_) => BillingService()..initialize(),
+        ),
         RepositoryProvider(create: (_) => AnalyticsService()),
         RepositoryProvider(create: (_) => AiRateLimitService(widget.prefs)),
       ],

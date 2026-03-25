@@ -68,6 +68,9 @@ class _AiPracticeView extends StatelessWidget {
           height: 56,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
+            // TODO(CYC-095): wire to real data — category list is a hardcoded
+            // static constant in AiPracticeBloc; should be driven by Firestore
+            // config or the question bank's actual topic list.
             itemCount: AiPracticeBloc.categories.length,
             separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
             itemBuilder: (context, index) {
