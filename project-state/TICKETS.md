@@ -367,10 +367,10 @@
 | CYC-097 | Fix DI bypass in FlashcardsBloc and ExamSimulatorBloc | Backend Dev | pending | P1 |
 | CYC-098 | Add orElse guard to BillingService.buyPremium() | Backend Dev | pending | P1 |
 | CYC-099 | Fix hardcoded locale 'en' — read user's selected language | Frontend Dev | pending | P1 |
-| CYC-100 | Widget optimizations (const constructors, narrow BlocBuilders, cached SharedPreferences) | Frontend Dev | pending | P2 |
+| CYC-100 | Widget optimizations (const constructors, narrow BlocBuilders, cached SharedPreferences) | Flutter Dev | done | P2 |
 | CYC-101 | Use Gemini systemInstruction parameter + cache ChatSession | Backend Dev | done | P2 |
-| CYC-102 | Code quality cleanup (extract Hive helper, deduplicate checklist, fix magic numbers, add comments) | Backend Dev | pending | P2 |
-| CYC-103 | Production hardening (gate debug prints, sanitize error messages, fix email validation, gitignore) | Backend Dev | pending | P2 |
+| CYC-102 | Code quality cleanup (extract Hive helper, deduplicate checklist, fix magic numbers, add comments) | Backend Dev | done | P2 |
+| CYC-103 | Production hardening (gate debug prints, sanitize error messages, fix email validation, gitignore) | Backend Dev | done | P2 |
 
 ### Acceptance Criteria
 - **CYC-096**: All 6 navigation TODOs wired to real screens. Paywall → PaywallScreen. Notifications → NotificationsScreen. Answer review → ReviewScreen. Date picker → DatePickerDialog.
