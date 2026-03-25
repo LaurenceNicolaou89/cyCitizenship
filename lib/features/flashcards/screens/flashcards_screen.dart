@@ -172,7 +172,7 @@ class _FlashcardsViewState extends State<_FlashcardsView> {
             backgroundColor: Theme.of(context).colorScheme.outlineVariant,
             valueColor:
                 const AlwaysStoppedAnimation<Color>(AppColors.primary),
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: const BorderRadius.all(Radius.circular(4)),
           ),
         ),
 
@@ -186,7 +186,7 @@ class _FlashcardsViewState extends State<_FlashcardsView> {
             initialIndex: state.currentIndex,
             numberOfCardsDisplayed: 1,
             isLoop: false,
-            backCardOffset: const Offset(0, 0),
+            backCardOffset: Offset.zero,
             allowedSwipeDirection:
                 const AllowedSwipeDirection.symmetric(horizontal: true),
             onSwipe: _onSwipe,
