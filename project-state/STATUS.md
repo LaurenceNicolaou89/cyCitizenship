@@ -2,7 +2,7 @@
 
 ## Project: CyCitizenship — Cyprus Citizenship Exam Prep App
 
-- **Current Phase**: Phase 5 — COMPLETE. All 103 tickets done. Ready for Phase 6 (Testing & Deployment).
+- **Current Phase**: Phase 6 — Testing complete. Store submission deferred (user decision).
 - **Active Agents**: All (default roster)
 - **Blockers**: None
 

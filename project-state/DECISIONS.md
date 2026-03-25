@@ -8,6 +8,7 @@
 | 2026-03-20 | Direct Play Store/App Store billing | Skip RevenueCat, simpler stack |
 | 2026-03-20 | No Docker | Firebase is serverless, Docker unnecessary |
 | 2026-03-20 | No Monday.com | Local project-state tracking |
+| 2026-03-26 | Store submission deferred | App is store-ready; user chose not to submit yet. Pending: GEMINI_API_KEY Firebase secret, Google Play service account JSON, App Store API keys |
 | 2026-03-20 | GitHub enabled | gh CLI verified, repo to be created |
 | 2026-03-20 | Multi-language: EN, RU, EL | Covers 90%+ of Cyprus exam candidates |
 | 2026-03-20 | Keep Learning partnership | In-app booking + exclusive content from partner institute |
