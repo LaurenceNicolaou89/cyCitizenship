@@ -19,13 +19,13 @@
 ## Agents
 - [PM] — Project Manager
 - [Researcher] — Business analysis, research
-- [Frontend Dev] — Flutter UI
+- [Flutter Dev] — Flutter UI (replaces Frontend Dev in mobile profile)
 - [Backend Dev] — Firebase, Gemini
 - [DBA] — Firestore schema, queries
 - [Security Dev] — Auth, security rules
-- [QA] — Testing, validation
+- [QA] — Testing, validation (flutter test / flutter drive)
 - [DevOps] — CI/CD, deployment
-- [Reviewer] — Code review
+- [Reviewer] — Code review (uses code-review + code-simplifier + audit-project)
 - [UI/UX] — Design system, accessibility
 
 ## Docs
@@ -39,3 +39,4 @@ All project state is in project-state/. Always check KNOWN-ISSUES.md before star
 - docs/coding-style.md — Dart/Flutter conventions, BLoC patterns
 - docs/design.md — UI wireframes, user flows, navigation
 - docs/design-style.md — Colors, typography, spacing, components
+- project-state/PLUGIN-PROFILE.md — Active plugin profile (flutter-saas)
