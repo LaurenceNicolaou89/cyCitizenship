@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../config/constants.dart';
 import '../../config/theme.dart';
 
 class PaywallScreen extends StatelessWidget {
@@ -91,7 +92,7 @@ class PaywallScreen extends StatelessWidget {
                     ),
                     _BenefitItem(
                       icon: Icons.smart_toy,
-                      title: 'AI Tutor (50 msgs/day)',
+                      title: 'AI Tutor (${AppConstants.premiumAiLimit} msgs/day)',
                       subtitle: 'Ask anything about Cyprus',
                     ),
                     _BenefitItem(

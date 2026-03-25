@@ -19,6 +19,10 @@ class AppConstants {
   // Paid tier limits
   static const int paidAiMessagesPerDay = 50;
 
+  // AI limit aliases (used by AI feature blocs and UI)
+  static const int freeAiLimit = freeAiMessagesPerDay;
+  static const int premiumAiLimit = paidAiMessagesPerDay;
+
   // Spaced repetition (Leitner box intervals in days)
   static const List<int> leitnerIntervals = [1, 3, 7, 14, 30];
 

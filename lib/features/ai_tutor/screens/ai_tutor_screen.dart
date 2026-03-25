@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../config/constants.dart';
 import '../../../config/theme.dart';
 import '../../../shared/widgets/chat_input_field.dart';
 import '../../../shared/widgets/chat_message_bubble.dart';
@@ -63,38 +64,45 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
       appBar: AppBar(
         title: const Text('AI Tutor'),
         actions: [
-          BlocBuilder<AiTutorBloc, AiTutorState>(
-            builder: (context, state) {
-              if (state is AiTutorLoaded) {
-                return Padding(
-                  padding: const EdgeInsets.only(right: AppSpacing.md),
-                  child: Center(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                        vertical: AppSpacing.xs,
+          BlocSelector<AiTutorBloc, AiTutorState, _UsageCounterData?>(
+            selector: (state) => state is AiTutorLoaded
+                ? _UsageCounterData(
+                    used: state.messagesUsedToday,
+                    limit: state.dailyLimit,
+                    limitReached: state.limitReached,
+                  )
+                : null,
+            builder: (context, data) {
+              if (data == null) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(right: AppSpacing.md),
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.xs,
+                    ),
+                    decoration: BoxDecoration(
+                      color: data.limitReached
+                          ? AppColors.error.withValues(alpha: 0.1)
+                          : AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: const BorderRadius.all(
+                        Radius.circular(12),
                       ),
-                      decoration: BoxDecoration(
-                        color: state.limitReached
-                            ? AppColors.error.withValues(alpha: 0.1)
-                            : AppColors.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        '${state.messagesUsedToday}/${state.dailyLimit} today',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: state.limitReached
-                              ? AppColors.error
-                              : AppColors.primary,
-                        ),
+                    ),
+                    child: Text(
+                      '${data.used}/${data.limit} today',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: data.limitReached
+                            ? AppColors.error
+                            : AppColors.primary,
                       ),
                     ),
                   ),
-                );
-              }
-              return const SizedBox.shrink();
+                ),
+              );
             },
           ),
           IconButton(
@@ -159,11 +167,9 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
               },
             ),
           ),
-          BlocBuilder<AiTutorBloc, AiTutorState>(
-            builder: (context, state) {
-              final limitReached =
-                  state is AiTutorLoaded && state.limitReached;
-
+          BlocSelector<AiTutorBloc, AiTutorState, bool>(
+            selector: (state) => state is AiTutorLoaded && state.limitReached,
+            builder: (context, limitReached) {
               if (limitReached) {
                 return _buildUpgradePrompt(context);
               }
@@ -282,7 +288,7 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'Upgrade to Premium for 50 messages per day',
+            'Upgrade to Premium for ${AppConstants.premiumAiLimit} messages per day',
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: AppSpacing.md),
@@ -302,6 +308,30 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
       ),
     );
   }
+}
+
+/// Lightweight value type used by [BlocSelector] to avoid rebuilding the
+/// usage counter badge on every state change (e.g. while streaming messages).
+class _UsageCounterData {
+  final int used;
+  final int limit;
+  final bool limitReached;
+
+  const _UsageCounterData({
+    required this.used,
+    required this.limit,
+    required this.limitReached,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      other is _UsageCounterData &&
+      other.used == used &&
+      other.limit == limit &&
+      other.limitReached == limitReached;
+
+  @override
+  int get hashCode => Object.hash(used, limit, limitReached);
 }
 
 class _SuggestionChip extends StatelessWidget {

@@ -137,21 +137,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: AppBar(
         title: const Text('Profile'),
       ),
-      body: BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, state) {
-          final isAuthenticated = state is AuthAuthenticated;
-          final user = isAuthenticated ? state.user : null;
-          final displayName =
-              _userModel?.displayName ?? user?.displayName ?? 'Guest User';
-          final email = user?.email ?? 'Not signed in';
-          final initials = _getInitials(displayName);
-          final userBadges = _userModel?.badges ?? [];
+      body: ListView(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        children: [
+          // Avatar and user info — rebuilt only when auth state changes
+          BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, state) {
+              final isAuthenticated = state is AuthAuthenticated;
+              final user = isAuthenticated ? state.user : null;
+              final displayName =
+                  _userModel?.displayName ?? user?.displayName ?? 'Guest User';
+              final email = user?.email ?? 'Not signed in';
+              final initials = _getInitials(displayName);
 
-          return ListView(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            children: [
-              // Avatar and user info
-              Center(
+              return Center(
                 child: Column(
                   children: [
                     CircleAvatar(
@@ -177,216 +176,219 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
+              );
+            },
+          ),
+          const SizedBox(height: AppSpacing.lg),
 
-              // Stats row
-              if (_isLoading)
-                const Center(child: CircularProgressIndicator())
-              else
-                Row(
-                  children: [
-                    _buildStatItem(
-                      context,
-                      icon: Icons.local_fire_department,
-                      value: '$_streak',
-                      label: 'Streak',
-                      color: AppColors.secondary,
+          // Stats row — driven by local state, no BlocBuilder needed
+          if (_isLoading)
+            const Center(child: CircularProgressIndicator())
+          else
+            Row(
+              children: [
+                _buildStatItem(
+                  context,
+                  icon: Icons.local_fire_department,
+                  value: '$_streak',
+                  label: 'Streak',
+                  color: AppColors.secondary,
+                ),
+                _buildStatItem(
+                  context,
+                  icon: Icons.quiz,
+                  value: '$_totalAnswered',
+                  label: 'Answered',
+                  color: AppColors.primary,
+                ),
+                _buildStatItem(
+                  context,
+                  icon: Icons.trending_up,
+                  value: '$_averageScore%',
+                  label: 'Avg Score',
+                  color: AppColors.success,
+                ),
+              ],
+            ),
+          const SizedBox(height: AppSpacing.lg),
+
+          // Subscription status — driven by local _userModel state
+          AppCard(
+            borderColor: AppColors.secondary,
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.secondary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.workspace_premium,
+                      color: AppColors.secondary, size: 24),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        (_userModel?.isPremium ?? false)
+                            ? 'Premium'
+                            : 'Free Plan',
+                        style: theme.textTheme.titleMedium,
+                      ),
+                      Text(
+                        (_userModel?.isPremium ?? false)
+                            ? 'All features unlocked'
+                            : '5 questions/day, limited features',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+                if (!(_userModel?.isPremium ?? false))
+                  SizedBox(
+                    height: 36,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        PaywallScreen.show(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.secondary,
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 16),
+                        minimumSize: Size.zero,
+                      ),
+                      child: const Text('Upgrade'),
                     ),
-                    _buildStatItem(
-                      context,
-                      icon: Icons.quiz,
-                      value: '$_totalAnswered',
-                      label: 'Answered',
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+
+          // Badges section — driven by local _userModel state
+          Text('Badges', style: theme.textTheme.titleMedium),
+          const SizedBox(height: AppSpacing.sm),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 4,
+              mainAxisSpacing: AppSpacing.sm,
+              crossAxisSpacing: AppSpacing.sm,
+              childAspectRatio: 0.8,
+            ),
+            itemCount: _badgeDefinitions.length,
+            itemBuilder: (context, index) {
+              final def = _badgeDefinitions[index];
+              final userBadges = _userModel?.badges ?? [];
+              final unlocked = userBadges.contains(def.id);
+              return _buildBadgeItem(
+                context,
+                _Badge(def.label, def.icon, unlocked),
+              );
+            },
+          ),
+          const SizedBox(height: AppSpacing.lg),
+
+          // Settings section — driven by local state
+          Text('Settings', style: theme.textTheme.titleMedium),
+          const SizedBox(height: AppSpacing.sm),
+          AppCard(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                // Language
+                ListTile(
+                  leading: const Icon(Icons.language),
+                  title: const Text('Language'),
+                  trailing: DropdownButton<String>(
+                    value: _selectedLanguage,
+                    underline: const SizedBox.shrink(),
+                    items: const [
+                      DropdownMenuItem(
+                          value: 'English', child: Text('English')),
+                      DropdownMenuItem(
+                          value: 'Greek', child: Text('Greek')),
+                      DropdownMenuItem(
+                          value: 'Russian', child: Text('Russian')),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) {
+                        setState(() => _selectedLanguage = val);
+                        _saveSetting(_keyLanguage, val);
+                      }
+                    },
+                  ),
+                ),
+                const Divider(height: 0),
+
+                // Notifications
+                SwitchListTile(
+                  secondary: const Icon(Icons.notifications_outlined),
+                  title: const Text('Notifications'),
+                  subtitle: const Text('Daily reminders & streak alerts'),
+                  value: _notificationsEnabled,
+                  activeTrackColor: AppColors.primary,
+                  onChanged: (val) {
+                    setState(() => _notificationsEnabled = val);
+                    _saveSetting(_keyNotifications, val);
+                  },
+                ),
+                const Divider(height: 0),
+
+                // Dark mode
+                SwitchListTile(
+                  secondary: const Icon(Icons.dark_mode_outlined),
+                  title: const Text('Dark Mode'),
+                  value: _darkModeEnabled,
+                  activeTrackColor: AppColors.primary,
+                  onChanged: (val) {
+                    setState(() => _darkModeEnabled = val);
+                    _saveSetting(_keyDarkMode, val);
+                  },
+                ),
+                const Divider(height: 0),
+
+                // Exam target date
+                ListTile(
+                  leading: const Icon(Icons.calendar_month),
+                  title: const Text('Exam Target Date'),
+                  trailing: Text(
+                    _examDate != null
+                        ? DateFormat('MMM d, yyyy').format(_examDate!)
+                        : 'Not set',
+                    style: theme.textTheme.bodyMedium?.copyWith(
                       color: AppColors.primary,
                     ),
-                    _buildStatItem(
-                      context,
-                      icon: Icons.trending_up,
-                      value: '$_averageScore%',
-                      label: 'Avg Score',
-                      color: AppColors.success,
-                    ),
-                  ],
+                  ),
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: _examDate ?? DateTime.now().add(const Duration(days: 90)),
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(const Duration(days: 365 * 3)),
+                      helpText: 'Select your exam target date',
+                    );
+                    if (picked != null && mounted) {
+                      setState(() => _examDate = picked);
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setInt(_keyExamDate, picked.millisecondsSinceEpoch);
+                    }
+                  },
                 ),
-              const SizedBox(height: AppSpacing.lg),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
 
-              // Subscription status
-              AppCard(
-                borderColor: AppColors.secondary,
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: AppColors.secondary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(Icons.workspace_premium,
-                          color: AppColors.secondary, size: 24),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            (_userModel?.isPremium ?? false)
-                                ? 'Premium'
-                                : 'Free Plan',
-                            style: theme.textTheme.titleMedium,
-                          ),
-                          Text(
-                            (_userModel?.isPremium ?? false)
-                                ? 'All features unlocked'
-                                : '5 questions/day, limited features',
-                            style: theme.textTheme.bodySmall,
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (!(_userModel?.isPremium ?? false))
-                      SizedBox(
-                        height: 36,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            PaywallScreen.show(context);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.secondary,
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 16),
-                            minimumSize: Size.zero,
-                          ),
-                          child: const Text('Upgrade'),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-
-              // Badges section
-              Text('Badges', style: theme.textTheme.titleMedium),
-              const SizedBox(height: AppSpacing.sm),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4,
-                  mainAxisSpacing: AppSpacing.sm,
-                  crossAxisSpacing: AppSpacing.sm,
-                  childAspectRatio: 0.8,
-                ),
-                itemCount: _badgeDefinitions.length,
-                itemBuilder: (context, index) {
-                  final def = _badgeDefinitions[index];
-                  final unlocked = userBadges.contains(def.id);
-                  return _buildBadgeItem(
-                    context,
-                    _Badge(def.label, def.icon, unlocked),
-                  );
-                },
-              ),
-              const SizedBox(height: AppSpacing.lg),
-
-              // Settings section
-              Text('Settings', style: theme.textTheme.titleMedium),
-              const SizedBox(height: AppSpacing.sm),
-              AppCard(
-                padding: EdgeInsets.zero,
-                child: Column(
-                  children: [
-                    // Language
-                    ListTile(
-                      leading: const Icon(Icons.language),
-                      title: const Text('Language'),
-                      trailing: DropdownButton<String>(
-                        value: _selectedLanguage,
-                        underline: const SizedBox.shrink(),
-                        // TODO(CYC-095): wire to real data — supported locales
-                        // should come from a shared app-level constant or
-                        // l10n config rather than being hardcoded here.
-                        items: const [
-                          DropdownMenuItem(
-                              value: 'English', child: Text('English')),
-                          DropdownMenuItem(
-                              value: 'Greek', child: Text('Greek')),
-                          DropdownMenuItem(
-                              value: 'Russian', child: Text('Russian')),
-                        ],
-                        onChanged: (val) {
-                          if (val != null) {
-                            setState(() => _selectedLanguage = val);
-                            _saveSetting(_keyLanguage, val);
-                          }
-                        },
-                      ),
-                    ),
-                    const Divider(height: 0),
-
-                    // Notifications
-                    SwitchListTile(
-                      secondary: const Icon(Icons.notifications_outlined),
-                      title: const Text('Notifications'),
-                      subtitle: const Text('Daily reminders & streak alerts'),
-                      value: _notificationsEnabled,
-                      activeTrackColor: AppColors.primary,
-                      onChanged: (val) {
-                        setState(() => _notificationsEnabled = val);
-                        _saveSetting(_keyNotifications, val);
-                      },
-                    ),
-                    const Divider(height: 0),
-
-                    // Dark mode
-                    SwitchListTile(
-                      secondary: const Icon(Icons.dark_mode_outlined),
-                      title: const Text('Dark Mode'),
-                      value: _darkModeEnabled,
-                      activeTrackColor: AppColors.primary,
-                      onChanged: (val) {
-                        setState(() => _darkModeEnabled = val);
-                        _saveSetting(_keyDarkMode, val);
-                      },
-                    ),
-                    const Divider(height: 0),
-
-                    // Exam target date
-                    ListTile(
-                      leading: const Icon(Icons.calendar_month),
-                      title: const Text('Exam Target Date'),
-                      trailing: Text(
-                        _examDate != null
-                            ? DateFormat('MMM d, yyyy').format(_examDate!)
-                            : 'Not set',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: AppColors.primary,
-                        ),
-                      ),
-                      onTap: () async {
-                        final picked = await showDatePicker(
-                          context: context,
-                          initialDate: _examDate ?? DateTime.now().add(const Duration(days: 90)),
-                          firstDate: DateTime.now(),
-                          lastDate: DateTime.now().add(const Duration(days: 365 * 3)),
-                          helpText: 'Select your exam target date',
-                        );
-                        if (picked != null && mounted) {
-                          setState(() => _examDate = picked);
-                          final prefs = await SharedPreferences.getInstance();
-                          await prefs.setInt(_keyExamDate, picked.millisecondsSinceEpoch);
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-
-              // Sign out (auth-dependent)
-              if (isAuthenticated)
-                SizedBox(
+          // Sign out / sign in — rebuilt only when auth state changes
+          BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, state) {
+              final isAuthenticated = state is AuthAuthenticated;
+              if (isAuthenticated) {
+                return SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: () {
@@ -401,20 +403,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       minimumSize: const Size(double.infinity, 48),
                     ),
                   ),
-                )
-              else
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () => context.go('/login'),
-                    icon: const Icon(Icons.login),
-                    label: const Text('Sign In'),
-                  ),
+                );
+              }
+              return SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => context.go('/login'),
+                  icon: const Icon(Icons.login),
+                  label: const Text('Sign In'),
                 ),
-              const SizedBox(height: AppSpacing.lg),
-            ],
-          );
-        },
+              );
+            },
+          ),
+          const SizedBox(height: AppSpacing.lg),
+        ],
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../config/constants.dart';
 import '../../../core/models/chat_message.dart';
 import '../../../core/services/gemini_service.dart';
 import 'greek_practice_event.dart';
@@ -21,7 +22,9 @@ class GreekPracticeBloc
   int _messagesUsedToday = 0;
   DateTime _lastResetDate = DateTime.now();
 
-  int get dailyLimit => isPremium ? 50 : 3;
+  int get dailyLimit => isPremium
+      ? AppConstants.premiumAiLimit
+      : AppConstants.freeAiLimit;
 
   GreekPracticeBloc({
     required GeminiService geminiService,

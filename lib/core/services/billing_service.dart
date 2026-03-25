@@ -12,6 +12,19 @@ enum VerificationResult {
   failed,
 }
 
+/// Purchase flow overview:
+///
+/// 1. [initialize] is called at app startup to check store availability and
+///    subscribe to the platform purchase stream.
+/// 2. The user taps "Upgrade" → [buyPremium] initiates a non-consumable IAP.
+/// 3. The platform emits [PurchaseStatus.purchased] or [PurchaseStatus.restored]
+///    on the purchase stream → [_handlePurchaseUpdate] picks this up.
+/// 4. [_verifyAndCompletePurchase] calls the `verifyPurchase` Cloud Function,
+///    which validates the receipt with Google Play / App Store.
+/// 5. On success the function updates the user's Firestore document and this
+///    service calls [completePurchase] to acknowledge the transaction.
+/// 6. [purchaseStream] emits [PurchaseStatus.purchased] so the BLoC can
+///    update local state and grant premium access.
 class BillingService implements IBillingService {
   final InAppPurchase _iap = InAppPurchase.instance;
   final FirebaseFunctions _functions = FirebaseFunctions.instance;
