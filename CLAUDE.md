@@ -28,6 +28,20 @@
 - [Reviewer] — Code review (uses code-review + code-simplifier + audit-project)
 - [UI/UX] — Design system, accessibility
 
+## Architecture Notes
+- GeminiService routes ALL AI calls through Firebase Cloud Functions (httpsCallable) — no direct Gemini SDK on client; systemInstruction/ChatSession are server-side concerns
+- Abstract interfaces exist: IAuthService, IFirestoreService, IGeminiService, IBillingService in lib/core/services/
+- Services (ProgressSyncService, NotificationService, BillingService) are managed by RepositoryProvider — dispose() handled automatically
+
+## QA Commands
+- `flutter test` — run all tests (57 tests, ~4s)
+- `dart analyze lib/` — static analysis, must be clean before PR
+
+## Parallel Agent Gotchas
+- Concurrent agents cause git race conditions — commits land on wrong branches; always verify branch after parallel dispatch
+- Stale `.git/index.lock` from concurrent git ops — safe to `rm -f .git/index.lock`
+- Agent prompts must explicitly state: "All git and gh CLI commands are pre-approved — do not ask for permission"
+
 ## Docs
 All project documentation is in docs/. All agents MUST reference these before starting work.
 All project state is in project-state/. Always check KNOWN-ISSUES.md before starting any ticket.
