@@ -54,12 +54,12 @@ class FlashcardsBloc extends Bloc<FlashcardsEvent, FlashcardsState> {
     }
   }
 
-  /// Schedule a debounced save of box levels (3-second delay).
+  /// Schedule a debounced save of box levels (5-second delay).
   /// Repeated calls within the window reset the timer.
   void _debounceSaveBoxLevels(Map<String, int> levels) {
     _pendingBoxLevels = levels;
     _saveDebounceTimer?.cancel();
-    _saveDebounceTimer = Timer(const Duration(seconds: 3), () {
+    _saveDebounceTimer = Timer(const Duration(seconds: 5), () {
       if (_pendingBoxLevels != null) {
         _saveBoxLevels(_pendingBoxLevels!);
         _pendingBoxLevels = null;
